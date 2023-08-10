@@ -1,7 +1,7 @@
 import DiscordInvalidLength from "#service/structure/error/DiscordInvalidLengthError.js";
 import ModalField from "#service/structure/modal/field.js";
 import Modal, { ModalSubmitFunction } from "#service/structure/modal/modal.js";
-import { AddProperty } from "#service/structure/typeUtil.js";
+import {  AddProperty, KeyValueMap, Params } from "#service/structure/typeUtil.js";
 import { TextStyles } from "@discordeno/bot";
 
 type ModalFieldBuilderFunction<
@@ -18,13 +18,13 @@ type ModalFieldOption<
     ModalFieldBuilder<ReturnType, Key, Required> |
     ModalFieldBuilderFunction<ReturnType, Key, Required>;
 
-export class ModalBuilder<Arguments extends object = {}> {
+export class ModalBuilder<PathParameters extends KeyValueMap = {}, Fields extends KeyValueMap = {}> {
 
     private _customId?: string;
     private _title?: string;
     private _fields: ModalField<unknown, string, boolean>[];
 
-    private _handler?: ModalSubmitFunction<Arguments>;
+    private _handler?: ModalSubmitFunction<PathParameters, Fields>;
 
     constructor() {
         this._fields = [];
@@ -33,7 +33,9 @@ export class ModalBuilder<Arguments extends object = {}> {
     /*
         Functions to set variables
     */
-    public id(id: string): this {
+    public id<P extends string>(id: P): ModalBuilder<Params<P>, Fields>;
+
+    public id(id: string): ModalBuilder<any, Fields> {
         this._customId = id;
         return this;
     }
@@ -47,9 +49,9 @@ export class ModalBuilder<Arguments extends object = {}> {
         ReturnType,
         Key extends string,
         Required extends boolean
-    >(value: ModalFieldOption<ReturnType, Key, Required>): ModalBuilder<AddProperty<Arguments, Key, ReturnType, Required>>;
+    >(value: ModalFieldOption<ReturnType, Key, Required>): ModalBuilder<PathParameters, AddProperty<Fields, Key, ReturnType, Required>>;
 
-    public field(value: ModalFieldOption<unknown, string, boolean>): ModalBuilder<any> {
+    public field(value: ModalFieldOption<unknown, string, boolean>): ModalBuilder<PathParameters, any> {
         if (value instanceof ModalField) {
             this._fields.push(value);
         } else if (value instanceof ModalFieldBuilder) {
@@ -60,7 +62,7 @@ export class ModalBuilder<Arguments extends object = {}> {
         return this;
     }
 
-    public handle(handler: ModalSubmitFunction<Arguments>): Modal<Arguments> {
+    public handle(handler: ModalSubmitFunction<PathParameters, Fields>): Modal<PathParameters, Fields> {
         this._handler = handler;
         return this.build();
     }
@@ -83,7 +85,7 @@ export class ModalBuilder<Arguments extends object = {}> {
         }
     }
 
-    public build(): Modal<Arguments> {
+    public build(): Modal<PathParameters, Fields> {
         // Validation will throw error if not valid
         this.validate();
 

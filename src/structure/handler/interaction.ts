@@ -3,6 +3,7 @@ import { Client } from "#service/structure/client.js";
 import AutocompleteContext from "#service/structure/command/autocompleteContext.js";
 import CommandContext from "#service/structure/command/context.js";
 import ModalSubmitContext from "#service/structure/modal/context.js";
+import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getCommandOptionsByPath, getCommandPath } from "#service/structure/util.js";
 import { Interaction, InteractionTypes } from "@discordeno/bot";
 
@@ -134,11 +135,12 @@ const handleModal = async (client: Client, interaction: Interaction) => {
         return;
     }
 
-    const context: ModalSubmitContext = new ModalSubmitContext(interaction, args);
+    const context: ModalSubmitContext<KeyValueMap, KeyValueMap> = new ModalSubmitContext(modal, interaction, args);
 
     // TODO handle errors
     try {
         await interaction.defer(true);
+        await context.parseArguments();
         await modal.execute(client, context);
     } finally {
         const end = performance.now();

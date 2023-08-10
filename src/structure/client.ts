@@ -17,7 +17,7 @@ export type Client = Bot & {
     emitter: EventEmitter3000;
 
     commands: Map<string, Command<any>>,
-    modals: Router<Modal>,
+    modals: Router<Modal<any,any>>,
     buttons: Router<ExecutableButton>,
 
     load: () => Promise<void>;
@@ -69,11 +69,11 @@ export default function createClient(options: ClientOptions): Client {
                     filter: (filename) => filename.endsWith('.js'),
                     foreach: (command: Command<any>) => this.commands.set(command.getFullName(), command),
                 }),
-                loadFromFolder<Modal>({
+                loadFromFolder<Modal<any, any>>({
                     folder: `${basefolder}/modals`,
                     clazz: Modal,
                     filter: (filename) => filename.endsWith('.js'),
-                    foreach: (modal: Modal) => this.modals.add(modal.getId(), modal),
+                    foreach: (modal: Modal<any, any>) => this.modals.add(modal.getId(), modal),
                 }),
                 loadFromFolder<ExecutableButton>({
                     folder: `${basefolder}/buttons`,

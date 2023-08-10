@@ -28,6 +28,10 @@ export default class ModalField<ReturnType extends any, _Key extends string, _R 
         }
     }
 
+    public get isRequired(): boolean {
+        return Boolean(this._component.required);
+    }
+
     public getName(): string {
         return this._component.customId;
     }
