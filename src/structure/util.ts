@@ -176,11 +176,11 @@ export function parseParameters(route?: string, parameters?: { [key: string]: st
     if (route === undefined) {
         return undefined;
     }
-    // TODO in case no parameters are passed, but there are parameters, it will not throw an error. FIX that
-    if (!parameters) {
-        return route;
-    }
     return route.replaceAll(/:([^\/]*)/g, (str) => {
+        if (!parameters) {
+            // TODO turn into framework error
+            throw new Error();
+        }
         const key = str.substring(1); // Cut off the :
         if (key in parameters) {
             return parameters[key];
