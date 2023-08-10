@@ -5,7 +5,7 @@ import { Interaction } from "@discordeno/bot";
 
 export default class ModalSubmitContext<PathParameters extends KeyValueMap, Arguments extends KeyValueMap> {
 
-    private readonly _pathArguments: Map<string, string>;
+    private readonly _pathParameters: Map<string, string>;
     private readonly _modal: Modal<PathParameters, Arguments>;
     readonly interaction: Interaction;
     arguments!: PathParameters & Arguments;
@@ -13,17 +13,14 @@ export default class ModalSubmitContext<PathParameters extends KeyValueMap, Argu
     constructor(modal: Modal<PathParameters, Arguments>, interaction: Interaction, args: Map<string, string>) {
         this._modal = modal;
         this.interaction = interaction;
-        this._pathArguments = args;
+        this._pathParameters = args;
     }
 
     async parseArguments(): Promise<void> {
         if (this.arguments) {
             return;
         }
-        const args = {} as any;
-        for (const [key, value] of this._pathArguments) {
-            args[key] = value;
-        }
+        const args = Object.fromEntries(this._pathParameters) as any;
 
         const options = getModalAnswers(this.interaction);
         for (const field of this._modal.getFields()) {
