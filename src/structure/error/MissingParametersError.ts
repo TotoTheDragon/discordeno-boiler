@@ -1,0 +1,1 @@
+export default class MissingParameterError extends Error { }

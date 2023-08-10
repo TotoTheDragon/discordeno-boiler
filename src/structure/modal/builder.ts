@@ -1,4 +1,4 @@
-import DiscordInvalidLength from "#service/structure/error/DiscordInvalidLengthError.js";
+import ValidationError from "#service/structure/error/ValidationError.js";
 import ModalField from "#service/structure/modal/field.js";
 import Modal, { ModalSubmitFunction } from "#service/structure/modal/modal.js";
 import {  AddProperty, KeyValueMap, Params } from "#service/structure/typeUtil.js";
@@ -72,16 +72,16 @@ export class ModalBuilder<PathParameters extends KeyValueMap = {}, Fields extend
     */
     public validate(): void {
         if (this._customId === undefined) {
-            throw new Error();
+            throw new ValidationError("custom_id is missing");
         }
         if (this._customId.length > 100) {
-            throw new DiscordInvalidLength("custom_id", this._customId);
+            throw new ValidationError("custom_id is not allowed to be longer than 100 characters");
         }
         if (this._title === undefined) {
-            throw new Error("A title is required");
+            throw new ValidationError("A title is required");
         }
         if (!this._fields) {
-            throw new Error("You need atleast 1 field");
+            throw new ValidationError("You need atleast 1 field");
         }
     }
 
@@ -158,13 +158,13 @@ export class ModalFieldBuilder<ReturnType = string, Key extends string = string,
   */
     public validate(): void {
         if (this._customId === undefined) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (this._customId.length > 100) {
-            throw new DiscordInvalidLength("custom_id", this._customId);
+            throw new ValidationError("custom_id is not allowed to be longer than 100 characters");
         }
         if (this._label === undefined) {
-            throw new Error("A label is required");
+            throw new ValidationError("A label is required");
         }
     }
 

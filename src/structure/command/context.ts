@@ -1,6 +1,7 @@
 import { Client } from "#service/structure/client.js";
 import Argument from "#service/structure/command/argument.js";
 import Command from "#service/structure/command/command.js";
+import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getCommandAnswers } from "#service/structure/util.js";
 import { Interaction, InteractionCallbackData } from "@discordeno/bot";
@@ -30,7 +31,7 @@ export default class CommandContext<Arguments extends KeyValueMap> {
             .filter(argument => argument.isRequired)
             .filter(argument => !(argument.getName() in args));
         if (missing.length > 0) {
-            throw new Error();
+            throw new DiscordValidationError();
         }
 
         // Parse arguments

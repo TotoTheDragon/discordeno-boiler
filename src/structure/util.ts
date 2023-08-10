@@ -1,4 +1,6 @@
 import Command from "#service/structure/command/command.js";
+import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
+import MissingParameterError from "#service/structure/error/MissingParametersError.js";
 import { EventHandlers, Interaction, InteractionDataOption, snakeToCamelCase } from "@discordeno/bot";
 import { ApplicationCommandOptionTypes, ApplicationCommandTypes, Camelize, CreateApplicationCommand, CreateSlashApplicationCommand, DiscordApplicationCommandOption, GatewayEventNames, InteractionTypes } from "@discordeno/types";
 
@@ -78,33 +80,9 @@ function insertApplicationCommand(command: Command<any>, commands: CreateSlashAp
     }
 }
 
-// let data = interaction.data.as_ref()?;
-// let interaction_data = extract!(data => ApplicationCommand);
-// if let Some(next) = self.get_next(&interaction_data.options) {
-//     let group = self.groups.get(&*interaction_data.name)?;
-//     match next.value.kind() {
-//         CommandOptionType::SubCommand => {
-//             let subcommands = group.kind.as_simple()?;
-//             subcommands.get(&*next.name)
-//         }
-//         CommandOptionType::SubCommandGroup => {
-//             let CommandOptionValue::SubCommandGroup(options) = &next.value else {
-//                 unreachable!();
-//             };
-//             let subcommand = self.get_next(options)?;
-//             let subgroups = group.kind.as_group()?;
-//             let group = subgroups.get(&*next.name)?;
-//             group.subcommands.get(&*subcommand.name)
-//         }
-//         _ => None,
-//     }
-// } else {
-//     self.commands.get(&*interaction_data.name)
-// }
-
-export function getCommandPath(interaction: Interaction, delimiter = "/"): string {
+export function getCommandPath(interaction: Interaction): string {
     if (!interaction.data) {
-        throw new Error();
+        throw new DiscordValidationError();
     }
     if (interaction.data.options?.length) {
         const group = interaction.data.options[0];
@@ -126,11 +104,11 @@ export function getCommandDataOptions(interaction: Interaction): InteractionData
         interaction.type !== InteractionTypes.ApplicationCommand &&
         interaction.type !== InteractionTypes.ApplicationCommandAutocomplete
     ) {
-        throw new Error();
+        throw new DiscordValidationError();
     }
 
     if (!interaction.data) {
-        throw new Error();
+        throw new DiscordValidationError();
     }
 
     if (interaction.data.options) {
@@ -157,10 +135,10 @@ export function getCommandAnswers(interaction: Interaction): Map<string, unknown
 
 export function getModalAnswers(interaction: Interaction): Map<string, string> {
     if (interaction.type !== InteractionTypes.ModalSubmit) {
-        throw new Error();
+        throw new DiscordValidationError();
     }
     if (interaction.data === undefined) {
-        throw new Error();
+        throw new DiscordValidationError();
     }
 
     return new Map(
@@ -178,15 +156,14 @@ export function parseParameters(route?: string, parameters?: { [key: string]: st
     }
     return route.replaceAll(/:([^\/]*)/g, (str) => {
         if (!parameters) {
-            // TODO turn into framework error
-            throw new Error();
+            throw new MissingParameterError();
         }
         const key = str.substring(1); // Cut off the :
         if (key in parameters) {
             return parameters[key];
         }
         if (throwOnMissing) {
-            throw new Error();
+            throw new MissingParameterError(key);
         }
         return str;
     })

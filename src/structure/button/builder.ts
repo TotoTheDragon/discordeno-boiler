@@ -1,4 +1,5 @@
-import Button, { ButtonFunction, ExecutableButton, LinkButton, PartialEmoji } from "#service/structure/button/button.js";
+import { ButtonFunction, ExecutableButton, LinkButton, PartialEmoji } from "#service/structure/button/button.js";
+import ValidationError from "#service/structure/error/ValidationError.js";
 import { KeyValueMap, Params } from "#service/structure/typeUtil.js";
 import { ButtonStyles } from "@discordeno/bot";
 
@@ -78,13 +79,13 @@ export class ExecutableButtonBuilder<PathParameters extends KeyValueMap = {}> {
     */
     private validate(): void {
         if (!this._style) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (this._customId && this._style === ButtonStyles.Link) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (this._customId && !this._handler) {
-            throw new Error();
+            throw new ValidationError();
         }
     }
 

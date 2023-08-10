@@ -1,3 +1,4 @@
+import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
 import Modal from "#service/structure/modal/modal.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getModalAnswers } from "#service/structure/util.js";
@@ -28,7 +29,7 @@ export default class ModalSubmitContext<PathParameters extends KeyValueMap, Argu
             .filter(field => field.isRequired)
             .filter(field => !(field.getName() in args));
         if (missing.length > 0) {
-            throw new Error();
+            throw new DiscordValidationError();
         }
 
         this.arguments = args;

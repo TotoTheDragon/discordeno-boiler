@@ -1,5 +1,6 @@
 import Argument, { ArgumentParseFunction, AutocompleteFunction } from "#service/structure/command/argument.js";
 import Command, { CommandFunction } from "#service/structure/command/command.js";
+import ValidationError from "#service/structure/error/ValidationError.js";
 import { AddProperty, KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption, ApplicationCommandOptionTypes, Attachment } from "@discordeno/bot";
 
@@ -63,7 +64,7 @@ export class CommandBuilder<Arguments extends KeyValueMap = {}> {
     public argument(value: ArgumentOption<string, unknown, boolean>): CommandBuilder<any> {
         if (value instanceof Argument) {
             if (this._arguments.find(a => a.getName() === value.getName())) {
-                throw new Error("Cannot have 2 arguments with the same name");
+                throw new ValidationError("Cannot have 2 arguments with the same name");
             }
             this._arguments.push(value);
         } else if (value instanceof ArgumentBuilder) {
@@ -84,13 +85,13 @@ export class CommandBuilder<Arguments extends KeyValueMap = {}> {
     */
     private validate(): void {
         if (!this._name) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (!this._description) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (!this._handler) {
-            throw new Error();
+            throw new ValidationError();
         }
     }
 
@@ -224,13 +225,13 @@ export class ArgumentBuilder<ReturnType, Key extends string = string, R extends 
 
     private validate(): void {
         if (!this._options.name) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (!this._options.type) {
-            throw new Error();
+            throw new ValidationError();
         }
         if (!this._options.description) {
-            throw new Error();
+            throw new ValidationError();
         }
     }
 
