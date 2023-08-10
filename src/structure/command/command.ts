@@ -2,12 +2,13 @@ import { Client } from "#service/structure/client.js";
 import Argument from "#service/structure/command/argument.js";
 import { CommandBuilder } from "#service/structure/command/builder.js";
 import CommandContext from "#service/structure/command/context.js";
+import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { Interaction } from "@discordeno/bot";
 import { ApplicationCommandOptionTypes, ApplicationCommandTypes, CreateApplicationCommand, DiscordApplicationCommandOption } from "@discordeno/types";
 
-export type CommandFunction<Arguments extends object> = (client: Client, context: CommandContext<Arguments>) => void | Promise<void>;
+export type CommandFunction<Arguments extends KeyValueMap> = (client: Client, context: CommandContext<Arguments>) => void | Promise<void>;
 
-export default class Command<Arguments extends object> {
+export default class Command<Arguments extends KeyValueMap> {
 
     private readonly _name: string;
     private readonly _description: string;

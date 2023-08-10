@@ -1,6 +1,6 @@
 import Argument, { ArgumentParseFunction, AutocompleteFunction } from "#service/structure/command/argument.js";
 import Command, { CommandFunction } from "#service/structure/command/command.js";
-import { AddProperty } from "#service/structure/typeUtil.js";
+import { AddProperty, KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption, ApplicationCommandOptionTypes, Attachment } from "@discordeno/bot";
 
 type ArgumentBuilderFunction<
@@ -17,7 +17,7 @@ type ArgumentOption<
     ArgumentBuilder<ReturnType, Key, Required> |
     ArgumentBuilderFunction<ReturnType, Key, Required>;
 
-export class CommandBuilder<Arguments extends object = {}> {
+export class CommandBuilder<Arguments extends KeyValueMap = {}> {
 
     private _name?: string;
     private _description?: string;
