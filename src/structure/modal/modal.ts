@@ -5,20 +5,20 @@ import ModalField from "#service/structure/modal/field.js";
 import { parseParameters } from "#service/structure/util.js";
 import { InputTextComponent, InteractionCallbackData } from "@discordeno/bot";
 
-export type ModalSubmitFunction = (client: Client, context: ModalSubmitContext) => void | Promise<void>;
+export type ModalSubmitFunction<Arguments extends object> = (client: Client, context: ModalSubmitContext<Arguments>) => void | Promise<void>;
 
 type InteractionOptions = {
     parameters?: { [key: string]: string }
     fieldOptions?: { [key: string]: Partial<InputTextComponent> }
 };
 
-export default class Modal {
+export default class Modal<Arguments extends object> {
     private readonly _customId: string;
     private readonly _title: string;
-    private readonly _fields: ModalField[];
-    readonly execute: ModalSubmitFunction;
+    private readonly _fields: ModalField<unknown, string, boolean>[];
+    readonly execute: ModalSubmitFunction<Arguments>;
 
-    constructor(customId: string, title: string, fields: ModalField[], handler: ModalSubmitFunction) {
+    constructor(customId: string, title: string, fields: ModalField<unknown, string, boolean>[], handler: ModalSubmitFunction<Arguments>) {
         this._customId = customId;
         this._title = title;
         this._fields = fields;

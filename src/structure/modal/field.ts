@@ -1,7 +1,10 @@
+import { Client } from "#service/structure/client.js";
 import { ModalFieldBuilder } from "#service/structure/modal/builder.js";
 import { ActionRow, InputTextComponent, MessageComponentTypes, TextStyles } from "@discordeno/types";
 
-export default class ModalField {
+export type ModalFieldParseFunction<ReturnType> = (client: Client, input: string) => ReturnType | Promise<ReturnType>;
+
+export default class ModalField<ReturnType extends any, _Key extends string, _R extends boolean> {
     private readonly _component: InputTextComponent;
 
     constructor(
@@ -39,7 +42,7 @@ export default class ModalField {
         }
     }
 
-    public static builder(): ModalFieldBuilder {
+    public static builder<T = string>(): ModalFieldBuilder<T> {
         return new ModalFieldBuilder();
     }
 }

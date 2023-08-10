@@ -1,17 +1,30 @@
 import DiscordInvalidLength from "#service/structure/error/DiscordInvalidLengthError.js";
 import ModalField from "#service/structure/modal/field.js";
 import Modal, { ModalSubmitFunction } from "#service/structure/modal/modal.js";
+import { AddProperty } from "#service/structure/typeUtil.js";
 import { TextStyles } from "@discordeno/bot";
 
-type ModalFieldBuilderFunction = (builder: ModalFieldBuilder) => ModalFieldBuilder;
+type ModalFieldBuilderFunction<
+    ReturnType,
+    Key extends string,
+    Required extends boolean = false
+> = (builder: ModalFieldBuilder) => ModalFieldBuilder<ReturnType, Key, Required>;
 
-export class ModalBuilder {
+type ModalFieldOption<
+    ReturnType,
+    Key extends string,
+    Required extends boolean
+> = ModalField<ReturnType, Key, Required> |
+    ModalFieldBuilder<ReturnType, Key, Required> |
+    ModalFieldBuilderFunction<ReturnType, Key, Required>;
+
+export class ModalBuilder<Arguments extends object = {}> {
 
     private _customId?: string;
     private _title?: string;
-    private _fields: ModalField[];
+    private _fields: ModalField<unknown, string, boolean>[];
 
-    private _handler?: ModalSubmitFunction;
+    private _handler?: ModalSubmitFunction<Arguments>;
 
     constructor() {
         this._fields = [];
@@ -30,7 +43,13 @@ export class ModalBuilder {
         return this;
     }
 
-    public field(value: ModalField | ModalFieldBuilder | ModalFieldBuilderFunction): this {
+    public field<
+        ReturnType,
+        Key extends string,
+        Required extends boolean
+    >(value: ModalFieldOption<ReturnType, Key, Required>): ModalBuilder<AddProperty<Arguments, Key, ReturnType, Required>>;
+
+    public field(value: ModalFieldOption<unknown, string, boolean>): ModalBuilder<any> {
         if (value instanceof ModalField) {
             this._fields.push(value);
         } else if (value instanceof ModalFieldBuilder) {
@@ -41,7 +60,7 @@ export class ModalBuilder {
         return this;
     }
 
-    public handle(handler: ModalSubmitFunction): Modal {
+    public handle(handler: ModalSubmitFunction<Arguments>): Modal<Arguments> {
         this._handler = handler;
         return this.build();
     }
@@ -64,7 +83,7 @@ export class ModalBuilder {
         }
     }
 
-    public build(): Modal {
+    public build(): Modal<Arguments> {
         // Validation will throw error if not valid
         this.validate();
 
@@ -78,7 +97,7 @@ export class ModalBuilder {
     }
 }
 
-export class ModalFieldBuilder {
+export class ModalFieldBuilder<ReturnType = string, Key extends string = string, Required extends boolean = false> {
 
     private _label?: string;
     private _customId?: string;
@@ -97,7 +116,7 @@ export class ModalFieldBuilder {
     /*
         Functions to set variables
     */
-    public id(id: string): this {
+    public id<U extends Key>(id: U): ModalFieldBuilder<ReturnType, U, Required> {
         this._customId = id;
         return this;
     }
@@ -112,7 +131,7 @@ export class ModalFieldBuilder {
         return this;
     }
 
-    public required(): this {
+    public required(): ModalFieldBuilder<ReturnType, Key, true> {
         this._required = true;
         return this;
     }
@@ -147,7 +166,7 @@ export class ModalFieldBuilder {
         }
     }
 
-    public build(): ModalField {
+    public build(): ModalField<ReturnType, Key, Required> {
         // Validation will throw error if not valid
         this.validate();
 
