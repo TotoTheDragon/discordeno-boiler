@@ -1,7 +1,6 @@
 import ButtonContext from "#service/structure/button/context.js";
 import { Client } from "#service/structure/client.js";
-import AutocompleteContext from "#service/structure/command/autocompleteContext.js";
-import CommandContext from "#service/structure/command/context.js";
+import CommandContext, { AutocompleteContext } from "#service/structure/command/context.js";
 import ModalSubmitContext from "#service/structure/modal/context.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getCommandDataOptions, getCommandPath } from "#service/structure/util.js";
@@ -54,7 +53,7 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
     }
 
     const options = getCommandDataOptions(interaction);
-
+    console.log(options);
     const argumentName = options[0].name;
 
     const argument = command.getArgument(argumentName);
@@ -70,7 +69,7 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
     }
 
     // TODO generate autocomplete context
-    const context: AutocompleteContext = {};
+    const context: AutocompleteContext = new AutocompleteContext(interaction);
 
     // TODO handle errors
     try {
@@ -88,11 +87,11 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
         console.log(`Autocomplete ${commandPath} took ${end - start}ms to process`);
     }
 };
-const handleComponent = async (client: Client, interaction: Interaction) => { 
+const handleComponent = async (client: Client, interaction: Interaction) => {
     const start = performance.now();
     const id = interaction.data?.customId;
-    
-    if(!id) {
+
+    if (!id) {
         // TODO warning maybe
         return;
     }
@@ -115,11 +114,11 @@ const handleComponent = async (client: Client, interaction: Interaction) => {
         console.log(`Button ${id} took ${end - start}ms to process`);
     }
 };
-const handleModal = async (client: Client, interaction: Interaction) => { 
+const handleModal = async (client: Client, interaction: Interaction) => {
     const start = performance.now();
     const id = interaction.data?.customId;
-    
-    if(!id) {
+
+    if (!id) {
         // TODO warning maybe
         return;
     }

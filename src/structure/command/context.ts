@@ -1,4 +1,5 @@
 import { Client } from "#service/structure/client.js";
+import Argument from "#service/structure/command/argument.js";
 import Command from "#service/structure/command/command.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getCommandAnswers } from "#service/structure/util.js";
@@ -51,4 +52,12 @@ export default class CommandContext<Arguments extends KeyValueMap> {
         await this.interaction.respond(response, { isPrivate: ephemeral });
     }
 
+}
+
+export class AutocompleteContext {
+    readonly interaction: Interaction;
+
+    constructor(interaction: Interaction) {
+        this.interaction = interaction;
+    }
 }

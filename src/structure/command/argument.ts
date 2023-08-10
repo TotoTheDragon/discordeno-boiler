@@ -1,7 +1,6 @@
 import { Client } from "#service/structure/client.js";
-import AutocompleteContext from "#service/structure/command/autocompleteContext.js";
 import { ArgumentTypeBuilder } from "#service/structure/command/builder.js";
-import CommandContext from "#service/structure/command/context.js";
+import CommandContext, { AutocompleteContext } from "#service/structure/command/context.js";
 import { ApplicationCommandOption } from "@discordeno/bot";
 import { DiscordApplicationCommandOption } from "@discordeno/types";
 
