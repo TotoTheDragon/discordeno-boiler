@@ -16,8 +16,8 @@ export type PartialEmoji = {
 
 export type ButtonFunction<PathParameters extends KeyValueMap> = (client: Client, context: ButtonContext<PathParameters>) => void | Promise<void>;
 
-type ComponentOptions = {
-    parameters?: { [key: string]: string }
+type ComponentOptions<PathParameters> = {
+    parameters?: { [Key in keyof PathParameters]: string }
     overrides?: Partial<ButtonComponent>
 }
 
@@ -54,7 +54,7 @@ export class ExecutableButton<PathParameters extends KeyValueMap> extends Button
         this.execute = handler;
     }
 
-    public component(options?: ComponentOptions): Component {
+    public component(options?: ComponentOptions<PathParameters>): Component {
         return {
             ...this._component,
             customId: parseParameters(this._component.customId, options?.parameters, true),

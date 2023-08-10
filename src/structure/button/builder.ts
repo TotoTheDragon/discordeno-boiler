@@ -68,7 +68,7 @@ export class ExecutableButtonBuilder<PathParameters extends KeyValueMap = {}> {
         return this;
     }
 
-    handle(handler: ButtonFunction<PathParameters>): Button {
+    handle(handler: ButtonFunction<PathParameters>): ExecutableButton<PathParameters> {
         this._handler = handler;
         return this.build();
     }
