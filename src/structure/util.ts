@@ -156,7 +156,6 @@ export function getCommandOptionsByPath(
     return data;
 }
 
-// TODO rewrite function
 export function getModalAnswers(interaction: Interaction): Map<string, string> {
     if (interaction.type !== InteractionTypes.ModalSubmit) {
         throw new Error();
@@ -165,19 +164,12 @@ export function getModalAnswers(interaction: Interaction): Map<string, string> {
         throw new Error();
     }
 
-    const opts = interaction.data.components;
-
-    const map = new Map();
-    if (typeof opts !== 'undefined') {
-        opts.forEach((cmp) => {
-            if (cmp.components?.length) {
-                console.log(cmp.components[0])
-                map.set(cmp.components[0].customId, cmp.components[0].value);
-            }
-        });
-    }
-
-    return map;
+    return new Map(
+        interaction.data.components!
+            .map(component => component.components![0])
+            .filter(component => component.value)
+            .map(component => [component.customId!, component.value!])
+    );
 }
 
 
