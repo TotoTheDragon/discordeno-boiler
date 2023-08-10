@@ -156,6 +156,31 @@ export function getCommandOptionsByPath(
     return data;
 }
 
+// TODO rewrite function
+export function getModalAnswers(interaction: Interaction): Map<string, string> {
+    if (interaction.type !== InteractionTypes.ModalSubmit) {
+        throw new Error();
+    }
+    if (interaction.data === undefined) {
+        throw new Error();
+    }
+
+    const opts = interaction.data.components;
+
+    const map = new Map();
+    if (typeof opts !== 'undefined') {
+        opts.forEach((cmp) => {
+            if (cmp.components?.length) {
+                console.log(cmp.components[0])
+                map.set(cmp.components[0].customId, cmp.components[0].value);
+            }
+        });
+    }
+
+    return map;
+}
+
+
 export function parseParameters(route?: string, parameters?: { [key: string]: string }, throwOnMissing = false): string | undefined {
     if (route === undefined) {
         return undefined;
