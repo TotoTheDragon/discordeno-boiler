@@ -29,7 +29,7 @@ export default class ModalSubmitContext<PathParameters extends KeyValueMap, Argu
         const missing = this._modal.getFields()
             .filter(field => field.isRequired)
             .filter(field => !(field.getName() in args));
-        if (missing) {
+        if (missing.length > 0) {
             throw new Error();
         }
 
