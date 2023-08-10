@@ -1,0 +1,135 @@
+import { getEventName, isClass, isInstanceOf } from "#service/structure/util.js";
+import { Bot, CreateBotOptions, createBot } from "@discordeno/bot";
+import { EventEmitter3000 } from "eventemitter3000";
+import * as transformers from "#service/structure/transformers/transformers.js";
+import { PathsOutput, fdir } from "fdir";
+import { relative, resolve } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
+import Command from "#service/structure/command/command.js";
+import { interactionHandler } from "#service/structure/handler/interaction.js";
+import Router from "#service/structure/router/router.js";
+import Modal from "#service/structure/modal/modal.js";
+import Button, { ExecutableButton } from "#service/structure/button/button.js";
+
+const basefolder = resolve(fileURLToPath(import.meta.url), '..', '..');
+
+export type Client = Bot & {
+    emitter: EventEmitter3000;
+
+    commands: Map<string, Command<any>>,
+    modals: Router<Modal>,
+    buttons: Router<ExecutableButton>,
+
+    load: () => Promise<void>;
+};
+
+export type ClientOptions = CreateBotOptions;
+
+export default function createClient(options: ClientOptions): Client {
+    const bot = createBot(options);
+    setDesiredProperties(bot);
+
+    const emitter = new EventEmitter3000();
+    const client = Object.assign(bot, { emitter });
+
+    client.events.raw = async (data, shard) => {
+        if (!data.t) {
+            return;
+        }
+
+        const event = getEventName(data.t);
+        const d = transformers[event as keyof typeof transformers]?.(bot, data) ?? [
+            data.d,
+        ];
+        await client.emitter.asyncEmit(event, ...d, shard).catch((err: Error) => {
+            console.log(err);
+        });
+    };
+
+
+
+    return {
+        ...client,
+        commands: new Map(),
+        modals: new Router(),
+        buttons: new Router(),
+        async load() {
+            /*
+                Load in default event handlers
+            */
+            this.emitter.on('interactionCreate', interactionHandler.bind(null, this));
+
+            /*
+                Load files to handle events, commands etc...
+            */
+            await Promise.all([
+                loadFromFolder<Command<any>>({
+                    folder: `${basefolder}/commands`,
+                    clazz: Command,
+                    filter: (filename) => filename.endsWith('.js'),
+                    foreach: (command: Command<any>) => this.commands.set(command.getFullName(), command),
+                }),
+                loadFromFolder<Modal>({
+                    folder: `${basefolder}/modals`,
+                    clazz: Modal,
+                    filter: (filename) => filename.endsWith('.js'),
+                    foreach: (modal: Modal) => this.modals.add(modal.getId(), modal),
+                }),
+                loadFromFolder<ExecutableButton>({
+                    folder: `${basefolder}/buttons`,
+                    clazz: ExecutableButton,
+                    filter: (filename) => filename.endsWith('.js'),
+                    foreach: (button: ExecutableButton) => this.buttons.add(button.getId(), button),
+                })
+            ]);
+        }
+    };
+}
+
+function setDesiredProperties(client: Bot): void {
+    client.transformers.desiredProperties.interaction = {
+        id: true,
+        applicationId: true,
+        type: true,
+        guildId: true,
+        channelId: true,
+        member: true,
+        user: true,
+        token: true,
+        version: true,
+        message: true,
+        data: true,
+        locale: true,
+        guildLocale: true,
+        appPermissions: true,
+    }
+}
+
+async function loadFromFolder<T>(options: LoadFromFolderOptions<T>) {
+    const files = new fdir()
+        .filter(options.filter)
+        .withBasePath()
+        .crawl(options.folder)
+        .sync() as PathsOutput;
+    console.log(
+        `Found ${files.length} in folder ${relative(basefolder, options.folder)}`,
+    );
+    await Promise.all(
+        files.map(async (file) => {
+            const props = await import(pathToFileURL(file).toString());
+            console.log(`Loading in values from ${relative(basefolder, file)}`);
+
+            const classes = Object.values<T>(props)
+                .filter((clazz) => clazz instanceof options.clazz);
+
+            classes.forEach(options.foreach);
+        }),
+    );
+}
+
+export interface LoadFromFolderOptions<T> {
+    folder: string;
+    clazz: any;
+    filter: (filename: string) => boolean;
+    foreach: (value: T) => void;
+}
