@@ -1,7 +1,7 @@
 import { Client } from "#service/structure/client.js";
 import Command from "#service/structure/command/command.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
-import { getCommandOptionsByPath } from "#service/structure/util.js";
+import { getCommandAnswers, getCommandDataOptions, getCommandOptionsByPath } from "#service/structure/util.js";
 import { Interaction, InteractionCallbackData } from "@discordeno/bot";
 
 export default class CommandContext<Arguments extends KeyValueMap> {
@@ -20,19 +20,27 @@ export default class CommandContext<Arguments extends KeyValueMap> {
         if (this.arguments) {
             return;
         }
+
+        // Extract argument answers
+        const args = Object.fromEntries(getCommandAnswers(this.interaction)) as any;
+
+        // Missing fields should never occur. This is just a sanity check
+        const missing = this._command.getArguments()
+            .filter(argument => argument.isRequired)
+            .filter(argument => !(argument.getName() in args));
+        if (missing.length > 0) {
+            throw new Error();
+        }
+
         // Parse arguments
-        this.arguments = {} as Arguments;
-        const options = getCommandOptionsByPath(this.interaction, this._command.getFullName());
         for (const argument of this._command.getArguments()) {
-            const option = options?.find(o => o.name === argument.getName());
-            if (!option && argument.isRequired) {
-                throw new Error();
-            }
-            if (option) {
-                const value = await argument.parse(client, option.value);
-                (this.arguments as any)[option.name] = value;
+            const name = argument.getName();
+            if (name in args) {
+                args[name] = await argument.parse(client, args[name]);
             }
         }
+
+        this.arguments = args;
     }
 
     async defer(ephemeral = true): Promise<void> {

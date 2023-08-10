@@ -101,6 +101,7 @@ function insertApplicationCommand(command: Command<any>, commands: CreateSlashAp
 // } else {
 //     self.commands.get(&*interaction_data.name)
 // }
+
 export function getCommandPath(interaction: Interaction, delimiter = "/"): string {
     if (!interaction.data) {
         throw new Error();
@@ -115,14 +116,45 @@ export function getCommandPath(interaction: Interaction, delimiter = "/"): strin
                 const subcommand = group.options![0];
                 return `${interaction.data.name}/${group.name}/${subcommand.name}`;
             }
-            default:
-                throw new Error("Invalid shit");
         }
     }
     return interaction.data.name;
 }
 
-// TODO rewrite entire function
+export function getCommandDataOptions(interaction: Interaction): InteractionDataOption[] {
+    if (
+        interaction.type !== InteractionTypes.ApplicationCommand &&
+        interaction.type !== InteractionTypes.ApplicationCommandAutocomplete
+    ) {
+        throw new Error();
+    }
+
+    if (!interaction.data) {
+        throw new Error();
+    }
+
+    if (interaction.data.options) {
+        const option = interaction.data.options[0];
+        switch (option.type) {
+            case ApplicationCommandOptionTypes.SubCommand: {
+                return option.options || [];
+            }
+            case ApplicationCommandOptionTypes.SubCommandGroup: {
+                return option.options?.[0].options || [];
+            }
+            default: {
+                return interaction.data.options
+            }
+        }
+    }
+
+    return [];
+}
+
+export function getCommandAnswers(interaction: Interaction): Map<string, unknown> {
+    return new Map(getCommandDataOptions(interaction).map(option => [option.name, option.value]));
+}
+// TODO remove this once possible
 export function getCommandOptionsByPath(
     interaction: Interaction,
     path: string,
