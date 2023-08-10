@@ -5,25 +5,23 @@ import { Interaction } from "@discordeno/bot";
 
 export default class ModalSubmitContext<PathParameters extends KeyValueMap, Arguments extends KeyValueMap> {
 
-    private readonly _pathParameters: Map<string, string>;
     private readonly _modal: Modal<PathParameters, Arguments>;
     readonly interaction: Interaction;
-    arguments!: PathParameters & Arguments;
+    readonly parameters: PathParameters;
+    arguments!: Arguments;
 
     constructor(modal: Modal<PathParameters, Arguments>, interaction: Interaction, args: Map<string, string>) {
         this._modal = modal;
         this.interaction = interaction;
-        this._pathParameters = args;
+        this.parameters = Object.fromEntries(args) as PathParameters;
     }
 
     async parseArguments(): Promise<void> {
         if (this.arguments) {
             return;
         }
-        // Convert path parameters to object
-        const args = Object.fromEntries(this._pathParameters) as any;
-        // Put modal answers into object
-        Object.assign(args, Object.fromEntries(getModalAnswers(this.interaction)));
+        // Convert arguments to object
+        const args = Object.fromEntries(getModalAnswers(this.interaction))  as any;
 
         // Missing fields should never occur. This is just a sanity check
         const missing = this._modal.getFields()
