@@ -1,27 +1,53 @@
 import Button, { ButtonFunction, ExecutableButton, LinkButton, PartialEmoji } from "#service/structure/button/button.js";
+import { KeyValueMap, Params } from "#service/structure/typeUtil.js";
 import { ButtonStyles } from "@discordeno/bot";
 
-export class ButtonBuilder {
-    _handler?: ButtonFunction;
+export class ButtonTypeBuilder {
+    public url(url: string): LinkButtonBuilder {
+        return new LinkButtonBuilder(url);
+    }
+
+    public id<P extends string>(id: P): ExecutableButtonBuilder<Params<P>>;
+
+    public id(id: string): ExecutableButtonBuilder<any> {
+        return new ExecutableButtonBuilder(id);
+    }
+}
+
+export class LinkButtonBuilder {
+    _label?: string;
+    _url?: string;
+
+    public constructor(url: string) {
+        this._url = url;
+    }
+
+    public label(label: string): this {
+        this._label = label;
+        return this;
+    }
+
+    public build(): LinkButton {
+        return new LinkButton(this._url, this._label)
+    }
+}
+
+export class ExecutableButtonBuilder<PathParameters extends KeyValueMap = {}> {
+    _handler?: ButtonFunction<PathParameters>;
     _style?: ButtonStyles;
     _label?: string;
     _customId?: string;
     _emoji?: PartialEmoji;
-    _url?: string;
     _disabled?: boolean;
 
-    constructor() {
+    public constructor(id: string) {
+        this._customId = id;
         this._disabled = false;
     }
 
     /*
         Set variables
     */
-    id(id: string): this {
-        this._customId = id;
-        return this
-    }
-
     label(label: string): this {
         this._label = label;
         return this;
@@ -42,13 +68,7 @@ export class ButtonBuilder {
         return this;
     }
 
-    url(url: string): Button {
-        this._url = url;
-        this.style(ButtonStyles.Link);
-        return this.build();
-    }
-
-    handle(handler: ButtonFunction): Button {
+    handle(handler: ButtonFunction<PathParameters>): Button {
         this._handler = handler;
         return this.build();
     }
@@ -68,27 +88,17 @@ export class ButtonBuilder {
         }
     }
 
-    public build(): Button {
+    public build(): ExecutableButton<PathParameters> {
         this.validate();
 
-        switch (this._style!) {
-            case ButtonStyles.Link: return new LinkButton(
-                this._label,
-                this._emoji,
-                this._url,
-                this._disabled
-            )
-
-            default: return new ExecutableButton(
-                this._handler!,
-                this._style!,
-                this._label,
-                this._customId,
-                this._emoji,
-                this._url,
-                this._disabled
-            );
-        }
+        return new ExecutableButton(
+            this._handler!,
+            this._style!,
+            this._label,
+            this._customId,
+            this._emoji,
+            this._disabled
+        );
     }
 
 }

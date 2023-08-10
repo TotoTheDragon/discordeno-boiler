@@ -18,7 +18,7 @@ export type Client = Bot & {
 
     commands: Map<string, Command<any>>,
     modals: Router<Modal<any,any>>,
-    buttons: Router<ExecutableButton>,
+    buttons: Router<ExecutableButton<any>>,
 
     load: () => Promise<void>;
 };
@@ -75,11 +75,11 @@ export default function createClient(options: ClientOptions): Client {
                     filter: (filename) => filename.endsWith('.js'),
                     foreach: (modal: Modal<any, any>) => this.modals.add(modal.getId(), modal),
                 }),
-                loadFromFolder<ExecutableButton>({
+                loadFromFolder<ExecutableButton<any>>({
                     folder: `${basefolder}/buttons`,
                     clazz: ExecutableButton,
                     filter: (filename) => filename.endsWith('.js'),
-                    foreach: (button: ExecutableButton) => this.buttons.add(button.getId(), button),
+                    foreach: (button: ExecutableButton<any>) => this.buttons.add(button.getId(), button),
                 })
             ]);
         }

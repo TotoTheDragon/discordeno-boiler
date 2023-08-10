@@ -1,6 +1,7 @@
-import { ButtonBuilder } from "#service/structure/button/builder.js";
+import { ButtonTypeBuilder } from "#service/structure/button/builder.js";
 import ButtonContext from "#service/structure/button/context.js";
 import { Client } from "#service/structure/client.js";
+import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { parseParameters } from "#service/structure/util.js";
 import { ButtonComponent, ButtonStyles, Component, MessageComponentTypes } from "@discordeno/bot";
 
@@ -13,7 +14,7 @@ export type PartialEmoji = {
     animated?: boolean;
 };
 
-export type ButtonFunction = (client: Client, context: ButtonContext) => void | Promise<void>;
+export type ButtonFunction<PathParameters extends KeyValueMap> = (client: Client, context: ButtonContext<PathParameters>) => void | Promise<void>;
 
 type ComponentOptions = {
     parameters?: { [key: string]: string }
@@ -26,21 +27,20 @@ export default abstract class Button {
         this._component = component;
     }
 
-    public static builder(): ButtonBuilder {
-        return new ButtonBuilder();
+    public static builder(): ButtonTypeBuilder {
+        return new ButtonTypeBuilder();
     }
 }
 
-export class ExecutableButton extends Button {
-    readonly execute: ButtonFunction;
+export class ExecutableButton<PathParameters extends KeyValueMap> extends Button {
+    readonly execute: ButtonFunction<PathParameters>;
 
     constructor(
-        handler: ButtonFunction,
+        handler: ButtonFunction<PathParameters>,
         style: ButtonStyles,
         label?: string,
         customId?: string,
         emoji?: PartialEmoji,
-        url?: string,
         disabled?: boolean,
     ) {
         super({
@@ -49,7 +49,6 @@ export class ExecutableButton extends Button {
             label,
             customId,
             emoji,
-            url,
             disabled,
         })
         this.execute = handler;
@@ -70,18 +69,14 @@ export class ExecutableButton extends Button {
 
 export class LinkButton extends Button {
     constructor(
-        label?: string,
-        emoji?: PartialEmoji,
         url?: string,
-        disabled?: boolean,
+        label?: string,
     ) {
         super({
             type: MessageComponentTypes.Button,
             style: ButtonStyles.Link,
             label,
-            emoji,
             url,
-            disabled,
         })
     }
 }

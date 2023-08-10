@@ -108,7 +108,7 @@ const handleComponent = async (client: Client, interaction: Interaction) => {
         return;
     }
 
-    const context: ButtonContext = new ButtonContext(interaction, args);
+    const context: ButtonContext<any> = new ButtonContext(interaction, args);
 
     // TODO handle errors
     try {
