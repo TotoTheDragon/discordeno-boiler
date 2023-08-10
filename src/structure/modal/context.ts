@@ -25,6 +25,14 @@ export default class ModalSubmitContext<PathParameters extends KeyValueMap, Argu
         // Put modal answers into object
         Object.assign(args, Object.fromEntries(getModalAnswers(this.interaction)));
 
+        // Missing fields should never occur. This is just a sanity check
+        const missing = this._modal.getFields()
+            .filter(field => field.isRequired)
+            .filter(field => !(field.getName() in args));
+        if (missing) {
+            throw new Error();
+        }
+
         this.arguments = args;
     }
 
