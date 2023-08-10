@@ -1,7 +1,7 @@
 import { Client } from "#service/structure/client.js";
 import Command from "#service/structure/command/command.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
-import { getCommandAnswers, getCommandDataOptions, getCommandOptionsByPath } from "#service/structure/util.js";
+import { getCommandAnswers } from "#service/structure/util.js";
 import { Interaction, InteractionCallbackData } from "@discordeno/bot";
 
 export default class CommandContext<Arguments extends KeyValueMap> {

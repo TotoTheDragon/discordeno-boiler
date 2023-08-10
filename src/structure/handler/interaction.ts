@@ -4,7 +4,7 @@ import AutocompleteContext from "#service/structure/command/autocompleteContext.
 import CommandContext from "#service/structure/command/context.js";
 import ModalSubmitContext from "#service/structure/modal/context.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
-import { getCommandOptionsByPath, getCommandPath } from "#service/structure/util.js";
+import { getCommandDataOptions, getCommandPath } from "#service/structure/util.js";
 import { Interaction, InteractionTypes } from "@discordeno/bot";
 
 export const interactionHandler = async (client: Client, interaction: Interaction) => {
@@ -53,12 +53,7 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
         return;
     }
 
-    const options = getCommandOptionsByPath(interaction, commandPath);
-
-    if (!options) {
-        // TODO warning maybe
-        return;
-    }
+    const options = getCommandDataOptions(interaction);
 
     const argumentName = options[0].name;
 

@@ -154,39 +154,6 @@ export function getCommandDataOptions(interaction: Interaction): InteractionData
 export function getCommandAnswers(interaction: Interaction): Map<string, unknown> {
     return new Map(getCommandDataOptions(interaction).map(option => [option.name, option.value]));
 }
-// TODO remove this once possible
-export function getCommandOptionsByPath(
-    interaction: Interaction,
-    path: string,
-    delimiter = "/"
-): InteractionDataOption[] | undefined {
-    if (
-        interaction.type !== InteractionTypes.ApplicationCommand &&
-        interaction.type !== InteractionTypes.ApplicationCommandAutocomplete
-    ) {
-        throw new Error();
-    }
-
-    if (interaction.data == null || interaction.data.name == null) {
-        throw new Error();
-    }
-
-    const names: string[] = path.split(delimiter);
-
-    // Make sure the path actually matches with the name
-    if (names.shift() !== interaction.data.name) {
-        return;
-    }
-
-    let data = interaction.data.options;
-
-    while (data !== undefined && names.length > 0) {
-        const currentName = names.shift();
-        data = data.find((opt) => opt.name === currentName)?.options;
-    }
-
-    return data;
-}
 
 export function getModalAnswers(interaction: Interaction): Map<string, string> {
     if (interaction.type !== InteractionTypes.ModalSubmit) {
