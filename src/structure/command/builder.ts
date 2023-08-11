@@ -118,7 +118,11 @@ export class ArgumentTypeBuilder {
 
     /*
     Types
-*/
+    */
+    public custom<T>(type: ApplicationCommandOptionTypes): ArgumentBuilder<T> {
+        return new ArgumentBuilder(type);
+    }
+
     public string(): ArgumentBuilder<string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.String);
     }
