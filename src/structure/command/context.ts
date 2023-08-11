@@ -17,32 +17,8 @@ export default class CommandContext<Arguments extends KeyValueMap> {
         this.interaction = interaction;
     }
 
-    async parseArguments(client: Client): Promise<void> {
-        // Arguments can only be parsed once
-        if (this.arguments) {
-            return;
-        }
-
-        // Extract argument answers
-        const args = Object.fromEntries(getCommandAnswers(this.interaction)) as any;
-
-        // Missing fields should never occur. This is just a sanity check
-        const missing = this._command.getArguments()
-            .filter(argument => argument.isRequired)
-            .filter(argument => !(argument.getName() in args));
-        if (missing.length > 0) {
-            throw new DiscordValidationError();
-        }
-
-        // Parse arguments
-        for (const argument of this._command.getArguments()) {
-            const name = argument.getName();
-            if (name in args) {
-                args[name] = await argument.parse(client, this as CommandContext<any>, args[name]);
-            }
-        }
-
-        this.arguments = args;
+    async parseArguments(client: Client, checkMissing = true): Promise<void> {
+        this.arguments = await new ArgumentParseContext<Arguments>(this._command.getArguments(), this.interaction).parse(client, checkMissing);
     }
 
     async defer(ephemeral = true): Promise<void> {
@@ -56,21 +32,57 @@ export default class CommandContext<Arguments extends KeyValueMap> {
 }
 
 export class AutocompleteContext<Arguments extends KeyValueMap> {
-    readonly interaction: Interaction;
-    readonly arguments!: Arguments;
+    private readonly _arguments: Argument<KeyValueMap, unknown, string, boolean>[];
+    private readonly _interaction: Interaction;
     readonly value: string | number;
+    arguments!: Arguments;
 
-    constructor(interaction: Interaction) {
-        this.interaction = interaction;
+    constructor(args: Argument<KeyValueMap, unknown, string, boolean>[], interaction: Interaction) {
+        this._arguments = args;
+        this._interaction = interaction;
         const options = getCommandDataOptions(interaction);
-        this.value = options[0].value! as string | number;
+        console.log(options.find(o => o.focused));
+        this.value = options.find(o => o.focused)!.value! as string | number;
     }
 
-    async parseArguments(): Promise<void> {
-        if (this.arguments){
-            return;
+    async parseArguments(client: Client): Promise<void> {
+        this.arguments = await new ArgumentParseContext<Arguments>(this._arguments, this._interaction).parse(client, false);
+    }
+}
+
+export class ArgumentParseContext<Arguments extends KeyValueMap> {
+
+    private readonly _arguments: Argument<KeyValueMap, unknown, string, boolean>[];
+    private readonly _interaction: Interaction;
+
+    constructor(args: Argument<KeyValueMap, unknown, string, boolean>[], interaction: Interaction) {
+        this._arguments = args;
+        this._interaction = interaction;
+    }
+
+    async parse(client: Client, checkMissing = true): Promise<Arguments> {
+        // Extract argument answers
+        const args = Object.fromEntries(getCommandAnswers(this._interaction)) as any;
+
+        // Missing fields should never occur. This is just a sanity check
+        if (checkMissing) {
+            const missing = this._arguments
+                .filter(argument => argument.isRequired)
+                .filter(argument => !(argument.getName() in args));
+            if (missing.length > 0) {
+                throw new DiscordValidationError();
+            }
         }
 
-        const args = Object.fromEntries(getCommandAnswers(this.interaction)) as any
+        // Parse arguments
+        for (const argument of this._arguments) {
+            const name = argument.getName();
+            if (name in args) {
+                args[name] = await argument.parse(client, this as ArgumentParseContext<any>, args[name]);
+            }
+        }
+
+        return args as Arguments;
     }
+
 }

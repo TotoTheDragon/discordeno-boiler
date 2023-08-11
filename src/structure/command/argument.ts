@@ -1,13 +1,13 @@
 import { Client } from "#service/structure/client.js";
 import { ArgumentTypeBuilder } from "#service/structure/command/builder.js";
-import CommandContext, { AutocompleteContext } from "#service/structure/command/context.js";
+import { ArgumentParseContext, AutocompleteContext } from "#service/structure/command/context.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption } from "@discordeno/bot";
 import { DiscordApplicationCommandOption } from "@discordeno/types";
 
 export type AutocompleteFunction<CommandArguments extends KeyValueMap> = (client: Client, context: AutocompleteContext<CommandArguments>) => string[] | number[] | Promise<string[]> | Promise<number[]>;
 
-export type ArgumentParseFunction<CommandArguments extends KeyValueMap, ReturnType> = (client: Client, context: CommandContext<CommandArguments>, input: string | number | boolean | unknown) => ReturnType | Promise<ReturnType>;
+export type ArgumentParseFunction<CommandArguments extends KeyValueMap, ReturnType> = (client: Client, context: ArgumentParseContext<CommandArguments>, input: string | number | boolean | unknown) => ReturnType | Promise<ReturnType>;
 
 export default class Argument<CommandArguments extends KeyValueMap, ReturnType extends any, _Key extends string, _R extends boolean> {
 
@@ -33,7 +33,7 @@ export default class Argument<CommandArguments extends KeyValueMap, ReturnType e
         return this._options;
     }
 
-    public static builder(): ArgumentTypeBuilder {
+    public static builder<T extends KeyValueMap>(): ArgumentTypeBuilder<T> {
         return new ArgumentTypeBuilder();
     }
 

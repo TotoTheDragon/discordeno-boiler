@@ -64,6 +64,11 @@ export default class Command<Arguments extends KeyValueMap> {
         return this._subgroup;
     }
 
+    public getArgumentsBefore(name: string): Argument<KeyValueMap, unknown, string, boolean>[] {
+        const index = this._options.findIndex(a => a.getName() === name);
+        return this._options.slice(0, Math.max(index, 0));
+    }
+
     public getArgument(name: string): Argument<KeyValueMap, unknown, string, boolean> | undefined {
         return this._options.find(a => a.getName() === name);
     }

@@ -54,8 +54,7 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
         }
 
         const options = getCommandDataOptions(interaction);
-        console.log(options);
-        const argumentName = options[0].name;
+        const argumentName = options.find(o => o.focused)!.name;
 
         const argument = command.getArgument(argumentName);
 
@@ -67,7 +66,9 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
             throw new MissingHandlerError();
         }
 
-        const context: AutocompleteContext<any> = new AutocompleteContext(interaction);
+        const context: AutocompleteContext<any> = new AutocompleteContext(command.getArgumentsBefore(argumentName), interaction);
+
+        await context.parseArguments(client);
 
         const results = await argument.autocomplete(client, context);
         await interaction.respond({
