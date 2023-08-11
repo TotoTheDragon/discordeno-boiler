@@ -2,7 +2,7 @@ import DiscordValidationError from "#service/structure/error/DiscordValidationEr
 import Modal from "#service/structure/modal/modal.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { getModalAnswers } from "#service/structure/util.js";
-import { Interaction } from "@discordeno/bot";
+import { Interaction, InteractionCallbackData } from "@discordeno/bot";
 
 export default class ModalSubmitContext<PathParameters extends KeyValueMap, Arguments extends KeyValueMap> {
 
@@ -35,4 +35,7 @@ export default class ModalSubmitContext<PathParameters extends KeyValueMap, Argu
         this.arguments = args;
     }
 
+    async respond(response: string | InteractionCallbackData, ephemeral?: boolean): Promise<void> {
+        await this.interaction.respond(response, { isPrivate: ephemeral });
+    }
 }
