@@ -5,24 +5,26 @@ import { AddProperty, KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption, ApplicationCommandOptionTypes, Attachment } from "@discordeno/bot";
 
 type ArgumentBuilderFunction<
+    CommandArguments extends KeyValueMap,
     ReturnType,
     Key extends string,
-    Required extends boolean = false
-> = (builder: ArgumentTypeBuilder) => ArgumentBuilder<ReturnType, Key, Required>;
+    Required extends boolean = false,
+> = (builder: ArgumentTypeBuilder<CommandArguments>) => ArgumentBuilder<CommandArguments, ReturnType, Key, Required>;
 
 type ArgumentOption<
+    CommandArguments extends KeyValueMap,
     Key extends string,
     ReturnType,
-    Required extends boolean
-> = Argument<ReturnType, Key, Required> |
-    ArgumentBuilder<ReturnType, Key, Required> |
-    ArgumentBuilderFunction<ReturnType, Key, Required>;
+    Required extends boolean,
+> = Argument<CommandArguments, ReturnType, Key, Required> |
+    ArgumentBuilder<CommandArguments, ReturnType, Key, Required> |
+    ArgumentBuilderFunction<CommandArguments, ReturnType, Key, Required>;
 
 export class CommandBuilder<Arguments extends KeyValueMap = {}> {
 
     private _name?: string;
     private _description?: string;
-    private _arguments: Argument<unknown, string, boolean>[];
+    private _arguments: Argument<KeyValueMap, unknown, string, boolean>[];
     private _subcommand?: string;
     private _subgroup?: string;
     private _handler?: CommandFunction<Arguments>;
@@ -58,15 +60,15 @@ export class CommandBuilder<Arguments extends KeyValueMap = {}> {
         Key extends string,
         ReturnType,
         Required extends boolean
-    >(value: ArgumentOption<Key, ReturnType, Required>): CommandBuilder<AddProperty<Arguments, Key, ReturnType, Required>>;
+    >(value: ArgumentOption<Arguments, Key, ReturnType, Required>): CommandBuilder<AddProperty<Arguments, Key, ReturnType, Required>>;
 
 
-    public argument(value: ArgumentOption<string, unknown, boolean>): CommandBuilder<any> {
+    public argument(value: ArgumentOption<Arguments, string, unknown, boolean>): CommandBuilder<any> {
         if (value instanceof Argument) {
             if (this._arguments.find(a => a.getName() === value.getName())) {
                 throw new ValidationError("Cannot have 2 arguments with the same name");
             }
-            this._arguments.push(value);
+            this._arguments.push(value as any);
         } else if (value instanceof ArgumentBuilder) {
             return this.argument(value.build())
         } else {
@@ -112,59 +114,59 @@ export class CommandBuilder<Arguments extends KeyValueMap = {}> {
 
 }
 
-export class ArgumentTypeBuilder {
+export class ArgumentTypeBuilder<CommandArguments extends KeyValueMap = {}> {
 
     constructor() { }
 
     /*
     Types
     */
-    public custom<T>(type: ApplicationCommandOptionTypes): ArgumentBuilder<T> {
+    public custom<T>(type: ApplicationCommandOptionTypes): ArgumentBuilder<CommandArguments, T> {
         return new ArgumentBuilder(type);
     }
 
-    public string(): ArgumentBuilder<string> {
+    public string(): ArgumentBuilder<CommandArguments, string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.String);
     }
 
-    public integer(): ArgumentBuilder<number> {
+    public integer(): ArgumentBuilder<CommandArguments, number> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Integer);
     }
 
-    public boolean(): ArgumentBuilder<boolean> {
+    public boolean(): ArgumentBuilder<CommandArguments, boolean> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Boolean);
     }
 
-    public user(): ArgumentBuilder<string> {
+    public user(): ArgumentBuilder<CommandArguments, string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.User);
     }
 
-    public channel(): ArgumentBuilder<string> {
+    public channel(): ArgumentBuilder<CommandArguments, string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Channel);
     }
 
-    public role(): ArgumentBuilder<string> {
+    public role(): ArgumentBuilder<CommandArguments, string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Role);
     }
 
-    public mentionable(): ArgumentBuilder<string> {
+    public mentionable(): ArgumentBuilder<CommandArguments, string> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Mentionable);
     }
 
-    public number(): ArgumentBuilder<number> {
+    public number(): ArgumentBuilder<CommandArguments, number> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Number);
     }
 
-    public attachment(): ArgumentBuilder<Attachment> {
+    public attachment(): ArgumentBuilder<CommandArguments, Attachment> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Attachment);
     }
 
 }
 
-export class ArgumentBuilder<ReturnType, Key extends string = string, R extends boolean = false> {
+export class ArgumentBuilder<CommandArguments extends KeyValueMap, ReturnType, Key extends string = string, R extends boolean = false> {
 
     private _options: ApplicationCommandOption;
-    private _parse: ArgumentParseFunction<ReturnType>;
+    private _parse: ArgumentParseFunction<CommandArguments, ReturnType>;
     private _autocomplete?: AutocompleteFunction;
 
     constructor(type: ApplicationCommandOptionTypes) {
@@ -172,13 +174,13 @@ export class ArgumentBuilder<ReturnType, Key extends string = string, R extends 
             required: false,
             type,
         } as ApplicationCommandOption;
-        this._parse = (_client, input) => input as ReturnType;
+        this._parse = (_client, _context, input) => input as ReturnType;
     }
 
     /*
         Options
     */
-    public name<U extends Key>(name: U): ArgumentBuilder<ReturnType, U, R> {
+    public name<U extends Key>(name: U): ArgumentBuilder<CommandArguments, ReturnType, U, R> {
         this._options.name = name;
         return this;
     }
@@ -188,7 +190,7 @@ export class ArgumentBuilder<ReturnType, Key extends string = string, R extends 
         return this;
     }
 
-    public required(): ArgumentBuilder<ReturnType, Key, true> {
+    public required(): ArgumentBuilder<CommandArguments, ReturnType, Key, true> {
         this._options.required = true;
         return this;
     }
@@ -222,7 +224,7 @@ export class ArgumentBuilder<ReturnType, Key extends string = string, R extends 
         return this;
     }
 
-    public parser(parser: ArgumentParseFunction<ReturnType>): this {
+    public parser(parser: ArgumentParseFunction<CommandArguments, ReturnType>): this {
         this._parse = parser;
         return this;
     }
@@ -239,7 +241,7 @@ export class ArgumentBuilder<ReturnType, Key extends string = string, R extends 
         }
     }
 
-    public build(): Argument<ReturnType, Key, R> {
+    public build(): Argument<CommandArguments, ReturnType, Key, R> {
         this.validate();
 
         return new Argument(

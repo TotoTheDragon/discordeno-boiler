@@ -38,7 +38,7 @@ export default class CommandContext<Arguments extends KeyValueMap> {
         for (const argument of this._command.getArguments()) {
             const name = argument.getName();
             if (name in args) {
-                args[name] = await argument.parse(client, args[name]);
+                args[name] = await argument.parse(client, this as CommandContext<any>, args[name]);
             }
         }
 

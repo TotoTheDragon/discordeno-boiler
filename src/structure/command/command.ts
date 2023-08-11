@@ -12,7 +12,7 @@ export default class Command<Arguments extends KeyValueMap> {
 
     private readonly _name: string;
     private readonly _description: string;
-    private readonly _options: Argument<unknown, string, boolean>[];
+    private readonly _options: Argument<KeyValueMap, unknown, string, boolean>[];
     private readonly _subcommand?: string;
     private readonly _subgroup?: string;
 
@@ -24,7 +24,7 @@ export default class Command<Arguments extends KeyValueMap> {
         name: string,
         description: string,
         handler: CommandFunction<Arguments>,
-        args: Argument<unknown, string, boolean>[],
+        args: Argument<KeyValueMap, unknown, string, boolean>[],
         subcommand?: string,
         subgroup?: string
     ) {
@@ -64,11 +64,11 @@ export default class Command<Arguments extends KeyValueMap> {
         return this._subgroup;
     }
 
-    public getArgument(name: string): Argument<unknown, string, boolean> | undefined {
+    public getArgument(name: string): Argument<KeyValueMap, unknown, string, boolean> | undefined {
         return this._options.find(a => a.getName() === name);
     }
 
-    public getArguments(): Argument<unknown, string, boolean>[] {
+    public getArguments(): Argument<KeyValueMap, unknown, string, boolean>[] {
         return this._options;
     }
 
