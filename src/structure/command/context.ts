@@ -3,7 +3,7 @@ import Argument from "#service/structure/command/argument.js";
 import Command from "#service/structure/command/command.js";
 import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
-import { getCommandAnswers } from "#service/structure/util.js";
+import { getCommandAnswers, getCommandDataOptions } from "#service/structure/util.js";
 import { Interaction, InteractionCallbackData } from "@discordeno/bot";
 
 export default class CommandContext<Arguments extends KeyValueMap> {
@@ -57,8 +57,11 @@ export default class CommandContext<Arguments extends KeyValueMap> {
 
 export class AutocompleteContext {
     readonly interaction: Interaction;
+    readonly value: string | number;
 
     constructor(interaction: Interaction) {
         this.interaction = interaction;
+        const options = getCommandDataOptions(interaction);
+        this.value = options[0].value! as string | number;
     }
 }
