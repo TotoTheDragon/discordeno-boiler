@@ -5,7 +5,7 @@ import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption } from "@discordeno/bot";
 import { DiscordApplicationCommandOption } from "@discordeno/types";
 
-export type AutocompleteFunction = (client: Client, context: AutocompleteContext) => string[] | number[] | Promise<string[]> | Promise<number[]>;
+export type AutocompleteFunction<CommandArguments extends KeyValueMap> = (client: Client, context: AutocompleteContext<CommandArguments>) => string[] | number[] | Promise<string[]> | Promise<number[]>;
 
 export type ArgumentParseFunction<CommandArguments extends KeyValueMap, ReturnType> = (client: Client, context: CommandContext<CommandArguments>, input: string | number | boolean | unknown) => ReturnType | Promise<ReturnType>;
 
@@ -13,9 +13,9 @@ export default class Argument<CommandArguments extends KeyValueMap, ReturnType e
 
     private readonly _options: ApplicationCommandOption;
     readonly parse: ArgumentParseFunction<CommandArguments, ReturnType>;
-    readonly autocomplete?: AutocompleteFunction;
+    readonly autocomplete?: AutocompleteFunction<CommandArguments>;
 
-    constructor(options: ApplicationCommandOption, parse: ArgumentParseFunction<CommandArguments, ReturnType>, autocomplete?: AutocompleteFunction) {
+    constructor(options: ApplicationCommandOption, parse: ArgumentParseFunction<CommandArguments, ReturnType>, autocomplete?: AutocompleteFunction<CommandArguments>) {
         this._options = options;
         this.parse = parse;
         this.autocomplete = autocomplete;

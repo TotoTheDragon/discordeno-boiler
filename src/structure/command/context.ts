@@ -55,13 +55,22 @@ export default class CommandContext<Arguments extends KeyValueMap> {
 
 }
 
-export class AutocompleteContext {
+export class AutocompleteContext<Arguments extends KeyValueMap> {
     readonly interaction: Interaction;
+    readonly arguments!: Arguments;
     readonly value: string | number;
 
     constructor(interaction: Interaction) {
         this.interaction = interaction;
         const options = getCommandDataOptions(interaction);
         this.value = options[0].value! as string | number;
+    }
+
+    async parseArguments(): Promise<void> {
+        if (this.arguments){
+            return;
+        }
+
+        const args = Object.fromEntries(getCommandAnswers(this.interaction)) as any
     }
 }

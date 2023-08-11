@@ -167,7 +167,7 @@ export class ArgumentBuilder<CommandArguments extends KeyValueMap, ReturnType, K
 
     private _options: ApplicationCommandOption;
     private _parse: ArgumentParseFunction<CommandArguments, ReturnType>;
-    private _autocomplete?: AutocompleteFunction;
+    private _autocomplete?: AutocompleteFunction<CommandArguments>;
 
     constructor(type: ApplicationCommandOptionTypes) {
         this._options = {
@@ -218,7 +218,7 @@ export class ArgumentBuilder<CommandArguments extends KeyValueMap, ReturnType, K
         return this;
     }
 
-    public autocomplete(autocomplete: AutocompleteFunction): this {
+    public autocomplete(autocomplete: AutocompleteFunction<CommandArguments>): this {
         this._autocomplete = autocomplete;
         this._options.autocomplete = true;
         return this;

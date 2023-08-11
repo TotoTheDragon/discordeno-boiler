@@ -67,7 +67,7 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
             throw new MissingHandlerError();
         }
 
-        const context: AutocompleteContext = new AutocompleteContext(interaction);
+        const context: AutocompleteContext<any> = new AutocompleteContext(interaction);
 
         const results = await argument.autocomplete(client, context);
         await interaction.respond({
