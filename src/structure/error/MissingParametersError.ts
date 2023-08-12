@@ -1,1 +1,1 @@
-export default class MissingParameterError extends Error { }
+export default class MissingParametersError extends Error { }

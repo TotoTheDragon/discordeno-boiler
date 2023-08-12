@@ -1,6 +1,6 @@
 import Command from "#service/structure/command/command.js";
 import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
-import MissingParameterError from "#service/structure/error/MissingParametersError.js";
+import MissingParametersError from "#service/structure/error/MissingParametersError.js";
 import { EventHandlers, Interaction, InteractionDataOption, snakeToCamelCase } from "@discordeno/bot";
 import { ApplicationCommandOptionTypes, ApplicationCommandTypes, CreateApplicationCommand, CreateSlashApplicationCommand, DiscordApplicationCommandOption, DiscordApplicationCommandOptionChoice, GatewayEventNames, InteractionTypes } from "@discordeno/types";
 
@@ -156,14 +156,14 @@ export function parseParameters(route?: string, parameters?: { [key: string]: st
     }
     return route.replaceAll(/:([^\/]*)/g, (str) => {
         if (!parameters) {
-            throw new MissingParameterError();
+            throw new MissingParametersError();
         }
         const key = str.substring(1); // Cut off the :
         if (key in parameters) {
             return parameters[key];
         }
         if (throwOnMissing) {
-            throw new MissingParameterError(key);
+            throw new MissingParametersError(key);
         }
         return str;
     })
