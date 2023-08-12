@@ -1,15 +1,16 @@
-import { getEventName, isClass, isInstanceOf } from "#service/structure/util.js";
-import { Bot, CreateBotOptions, createBot } from "@discordeno/bot";
-import { EventEmitter3000 } from "eventemitter3000";
+import { ExecutableButton } from "#service/structure/button/button.js";
+import Command from "#service/structure/command/command.js";
+import { interactionErrorHandler } from "#service/structure/handler/interaction.error.js";
+import { interactionHandler } from "#service/structure/handler/interaction.js";
+import Modal from "#service/structure/modal/modal.js";
+import Router from "#service/structure/router/router.js";
 import * as transformers from "#service/structure/transformers/transformers.js";
+import { getEventName } from "#service/structure/util.js";
+import { Bot, CreateBotOptions, Interaction, createBot } from "@discordeno/bot";
+import { EventEmitter3000 } from "eventemitter3000";
 import { PathsOutput, fdir } from "fdir";
 import { relative, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import Command from "#service/structure/command/command.js";
-import { interactionHandler } from "#service/structure/handler/interaction.js";
-import Router from "#service/structure/router/router.js";
-import Modal from "#service/structure/modal/modal.js";
-import Button, { ExecutableButton } from "#service/structure/button/button.js";
 
 const basefolder = resolve(fileURLToPath(import.meta.url), '..', '..');
 
@@ -17,15 +18,18 @@ export type Client = Bot & {
     emitter: EventEmitter3000;
 
     commands: Map<string, Command<any>>,
-    modals: Router<Modal<any,any>>,
+    modals: Router<Modal<any, any>>,
     buttons: Router<ExecutableButton<any>>,
 
     load: () => Promise<void>;
 };
 
 export type ClientOptions = CreateBotOptions;
+export type FrameworkOptions = Partial<{
+    interactionErrorHandler: (err: unknown, interaction: Interaction) => Promise<void>;
+}>;
 
-export default function createClient(options: ClientOptions): Client {
+export default function createClient(options: ClientOptions, frameworkOptions?: FrameworkOptions): Client {
     const bot = createBot(options);
     setDesiredProperties(bot);
 
@@ -57,7 +61,14 @@ export default function createClient(options: ClientOptions): Client {
             /*
                 Load in default event handlers
             */
-            this.emitter.on('interactionCreate', interactionHandler.bind(null, this));
+            const handleInteractionError = frameworkOptions?.interactionErrorHandler ?? interactionErrorHandler;
+            this.emitter.on('interactionCreate', async (interaction: Interaction) => {
+                try {
+                    await interactionHandler(this, interaction);
+                } catch (error) {
+                    await handleInteractionError(error, interaction);
+                }
+            });
 
             /*
                 Load files to handle events, commands etc...
