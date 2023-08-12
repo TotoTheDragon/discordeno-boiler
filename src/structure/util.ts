@@ -2,7 +2,7 @@ import Command from "#service/structure/command/command.js";
 import DiscordValidationError from "#service/structure/error/DiscordValidationError.js";
 import MissingParameterError from "#service/structure/error/MissingParametersError.js";
 import { EventHandlers, Interaction, InteractionDataOption, snakeToCamelCase } from "@discordeno/bot";
-import { ApplicationCommandOptionTypes, ApplicationCommandTypes, Camelize, CreateApplicationCommand, CreateSlashApplicationCommand, DiscordApplicationCommandOption, GatewayEventNames, InteractionTypes } from "@discordeno/types";
+import { ApplicationCommandOptionTypes, ApplicationCommandTypes, CreateApplicationCommand, CreateSlashApplicationCommand, DiscordApplicationCommandOption, DiscordApplicationCommandOptionChoice, GatewayEventNames, InteractionTypes } from "@discordeno/types";
 
 const GATEWAY_EVENT_MAPPING: { [key in GatewayEventNames]?: keyof EventHandlers } = {
     MESSAGE_REACTION_ADD: 'reactionAdd',
@@ -167,4 +167,39 @@ export function parseParameters(route?: string, parameters?: { [key: string]: st
         }
         return str;
     })
+}
+
+export function convertToOptions(arr: string[] | number[] | DiscordApplicationCommandOptionChoice[]): DiscordApplicationCommandOptionChoice[] {
+    if (isArrayOfStrings(arr)) {
+        return arr.map(item => {
+            return {
+                name: item,
+                value: item
+            }
+        })
+    }
+    if (isArrayOfNumbers(arr)) {
+        return arr.map(item => {
+            return {
+                name: item.toString(),
+                value: item
+            }
+        })
+    }
+    if (isArrayOfCommandOptionChoice(arr)) {
+        return arr;
+    }
+    return [];
+}
+
+function isArrayOfStrings(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every(item => typeof item === "string");
+}
+
+function isArrayOfNumbers(value: unknown): value is number[] {
+    return Array.isArray(value) && value.every(item => typeof item === "number");
+}
+
+function isArrayOfCommandOptionChoice(value: unknown): value is DiscordApplicationCommandOptionChoice[] {
+    return Array.isArray(value) && value.every(item => typeof item === "object" && 'name' in item && 'value' in item);
 }

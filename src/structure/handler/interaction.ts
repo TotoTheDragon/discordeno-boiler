@@ -5,7 +5,7 @@ import MissingHandlerError from "#service/structure/error/MissingHandlerError.js
 
 import ModalSubmitContext from "#service/structure/modal/context.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
-import { getCommandDataOptions, getCommandPath } from "#service/structure/util.js";
+import { convertToOptions, getCommandDataOptions, getCommandPath } from "#service/structure/util.js";
 import { Interaction, InteractionTypes } from "@discordeno/bot";
 
 export const interactionHandler = async (client: Client, interaction: Interaction) => {
@@ -71,14 +71,8 @@ const handleAutocomplete = async (client: Client, interaction: Interaction) => {
         await context.parseArguments(client);
 
         const results = await argument.autocomplete(client, context);
-        await interaction.respond({
-            choices: results.map(v => {
-                return {
-                    name: v.toString(),
-                    value: v
-                }
-            })
-        });
+        const choices = convertToOptions(results);
+        await interaction.respond({ choices });
         // TODO handle errors
     } finally {
         const end = performance.now();

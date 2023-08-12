@@ -3,9 +3,9 @@ import { ArgumentTypeBuilder } from "#service/structure/command/builder.js";
 import { ArgumentParseContext, AutocompleteContext } from "#service/structure/command/context.js";
 import { KeyValueMap } from "#service/structure/typeUtil.js";
 import { ApplicationCommandOption } from "@discordeno/bot";
-import { DiscordApplicationCommandOption } from "@discordeno/types";
+import { DiscordApplicationCommandOption, DiscordApplicationCommandOptionChoice } from "@discordeno/types";
 
-export type AutocompleteFunction<CommandArguments extends KeyValueMap> = (client: Client, context: AutocompleteContext<CommandArguments>) => string[] | number[] | Promise<string[]> | Promise<number[]>;
+export type AutocompleteFunction<CommandArguments extends KeyValueMap> = (client: Client, context: AutocompleteContext<CommandArguments>) => string[] | Promise<string[]> | number[] | Promise<number[]> | DiscordApplicationCommandOptionChoice[] | Promise<DiscordApplicationCommandOptionChoice[]>;
 
 export type ArgumentParseFunction<CommandArguments extends KeyValueMap, ReturnType> = (client: Client, context: ArgumentParseContext<CommandArguments>, input: string | number | boolean | unknown) => ReturnType | Promise<ReturnType>;
 
