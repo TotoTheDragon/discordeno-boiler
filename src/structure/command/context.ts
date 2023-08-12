@@ -41,7 +41,6 @@ export class AutocompleteContext<Arguments extends KeyValueMap> {
         this._arguments = args;
         this._interaction = interaction;
         const options = getCommandDataOptions(interaction);
-        console.log(options.find(o => o.focused));
         this.value = options.find(o => o.focused)!.value! as string | number;
     }
 
