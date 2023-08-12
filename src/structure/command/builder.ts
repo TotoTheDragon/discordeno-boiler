@@ -2,7 +2,7 @@ import Argument, { ArgumentParseFunction, AutocompleteFunction } from "#service/
 import Command, { CommandFunction } from "#service/structure/command/command.js";
 import ValidationError from "#service/structure/error/ValidationError.js";
 import { AddProperty, KeyValueMap } from "#service/structure/typeUtil.js";
-import { ApplicationCommandOption, ApplicationCommandOptionTypes, Attachment } from "@discordeno/bot";
+import { ApplicationCommandOption, ApplicationCommandOptionTypes, Attachment, User } from "@discordeno/bot";
 
 type ArgumentBuilderFunction<
     CommandArguments extends KeyValueMap,
@@ -137,8 +137,10 @@ export class ArgumentTypeBuilder<CommandArguments extends KeyValueMap = {}> {
         return new ArgumentBuilder(ApplicationCommandOptionTypes.Boolean);
     }
 
-    public user(): ArgumentBuilder<CommandArguments, string> {
-        return new ArgumentBuilder(ApplicationCommandOptionTypes.User);
+    public user(): ArgumentBuilder<CommandArguments, User> {
+        return new ArgumentBuilder<CommandArguments, User>(ApplicationCommandOptionTypes.User).parser((client, context, input) => {
+            return context.interaction.data?.resolved?.users?.get(BigInt(input as string))!;
+        });
     }
 
     public channel(): ArgumentBuilder<CommandArguments, string> {

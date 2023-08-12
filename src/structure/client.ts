@@ -114,6 +114,24 @@ function setDesiredProperties(client: Bot): void {
         guildLocale: true,
         appPermissions: true,
     }
+    client.transformers.desiredProperties.user = {
+        username: true,
+        globalName: true,
+        locale: true,
+        flags: true,
+        premiumType: true,
+        publicFlags: true,
+        accentColor: true,
+        id: true,
+        discriminator: true,
+        avatar: true,
+        bot: true,
+        system: true,
+        mfaEnabled: true,
+        verified: true,
+        email: true,
+        banner: true,
+    }
 }
 
 async function loadFromFolder<T>(options: LoadFromFolderOptions<T>) {
