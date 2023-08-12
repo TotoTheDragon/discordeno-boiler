@@ -52,16 +52,16 @@ export class AutocompleteContext<Arguments extends KeyValueMap> {
 export class ArgumentParseContext<Arguments extends KeyValueMap> {
 
     private readonly _arguments: Argument<KeyValueMap, unknown, string, boolean>[];
-    private readonly _interaction: Interaction;
+    readonly interaction: Interaction;
 
     constructor(args: Argument<KeyValueMap, unknown, string, boolean>[], interaction: Interaction) {
         this._arguments = args;
-        this._interaction = interaction;
+        this.interaction = interaction;
     }
 
     async parse(client: Client, checkMissing = true): Promise<Arguments> {
         // Extract argument answers
-        const args = Object.fromEntries(getCommandAnswers(this._interaction)) as any;
+        const args = Object.fromEntries(getCommandAnswers(this.interaction)) as any;
 
         // Missing fields should never occur. This is just a sanity check
         if (checkMissing) {
