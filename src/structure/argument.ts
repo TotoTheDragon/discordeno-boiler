@@ -1,9 +1,9 @@
-import { ApplicationCommandOptionTypes, DiscordApplicationCommandOption } from "@discordeno/types";
 // import { Command } from "src/structure/command.js";
 // import { implementsStatic } from "src/structure/decorators.js";
 
-import { Buildable } from "src/structure/builder.js";
-import { ClassFields } from "src/structure/typeUtil.js";
+import { ApplicationCommandOptionTypes } from "@discordeno/bot";
+import { Buildable } from "./builder.js";
+import { ClassFields } from "./typeUtil.js";
 
 // function f(key: string): any {
 //     console.log("evaluate: ", key);

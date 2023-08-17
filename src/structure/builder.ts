@@ -1,9 +1,17 @@
-import { Append, ClassFields, ExtractType, Merge, RemoveArrayTypes, ReturnTypeOrType } from "src/structure/typeUtil.js";
+import { ClassFields, ExtractType, IfElse, IsArray, IsEmpty, Merge, Push, RemoveArrayTypes, RequiredClassFields, ReturnTypeOrType } from "./typeUtil.js";
+
+// This symbol is used a field on Buildable to make sure that the type system can properly pick up that it is an instance of Buildable
+const BuildableSymbol = Symbol("buildable");
 
 export abstract class Buildable<Values> {
 
+    [BuildableSymbol]?: never;
+
+    constructor() {
+    }
+
     static builder<T extends Buildable<any>>(this: new (...args: any[]) => T): Builder<T> {
-        return createBuilder(this.prototype);
+        return createBuilder(this);
     }
 
     static defaults(): Record<string, any> {
@@ -15,76 +23,119 @@ export abstract class Buildable<Values> {
     }
 }
 
-type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => Builder<T>);
+type IsBuildable<T> = T extends Buildable<any> | Buildable<any>[] ? true : false;
 
+
+type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => CanBuild<T, any>);
 type GetName<Type, Key extends string> = Type extends any[] ? Key extends `${infer key}s` ? key : Key : Key;
+
+
+export type MissingFields<T, FieldValues> = Omit<RequiredClassFields<T>, keyof FieldValues>;
+export type FieldsToSet<T, FieldValues> = Omit<ClassFields<T>, keyof RemoveArrayTypes<FieldValues>>;
+
 
 type BuilderSetFunction<
     Key extends string,
     ValueType,
     BuilderReturnType,
     Values extends Record<string, any>
-> = ValueType extends Buildable<any>
-    ? BuilderSetBuildableFunction<Key, ValueType, BuilderReturnType, Values>
-    : BuilderSetGenericFunction<Key, ValueType, BuilderReturnType, Values>;
+> = IfElse<
+    IsBuildable<ValueType>,
+    BuilderSetFunctionHelper<Key, BuildableFunction<ExtractType<ValueType>>, BuilderReturnType, Values, IsArray<ValueType>>,
+    BuilderSetFunctionHelper<Key, ExtractType<ValueType>, BuilderReturnType, Values, IsArray<ValueType>>
+>;
 
-type BuilderSetGenericFunction<
+type BuilderSetFunctionHelper<
     Key extends string,
     ValueType,
     BuilderReturnType,
-    Values extends Record<string, any>
-> = ValueType extends any[]
-    ? <U extends ExtractType<ValueType>>(arr_value: U) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<U, Values[Key]> }>>
-    : <U extends ValueType>(value: U) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: U }>>;
-
-type BuilderSetBuildableFunction<
-    Key extends string,
-    ValueType extends Buildable<any>,
-    BuilderReturnType,
-    Values extends Record<string, any>
-> = ValueType extends any[]
-    ? <U extends ExtractType<ValueType>, V extends BuildableFunction<U>>(arr_builder: V) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<ReturnTypeOrType<V>, Values[Key]> }>>
-    : <U extends ValueType>(builder: U) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: U }>>;
-
+    Values extends Record<string, any>,
+    IsArray extends boolean
+> = IfElse<
+    IsArray,
+    <V extends ValueType>(abz: V) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Push<ReturnTypeOrType<V>, Values[Key]> }>>,
+    <V extends ValueType>(bz: V) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: V }>>
+>;
 
 export type Builder<
-    BuilderReturnType,
+    T,
     FieldValues extends Record<string, any> = {},
-    FieldsToSet = Omit<ClassFields<BuilderReturnType>, keyof RemoveArrayTypes<FieldValues>>,
-> =
-    { build: () => BuilderReturnType & Buildable<FieldValues> } &
-    {
-        [Key in keyof FieldsToSet & string as GetName<FieldsToSet[Key], Key>]: BuilderSetFunction<Key, FieldsToSet[Key], BuilderReturnType, FieldValues>
+> = IfElse<
+    IsEmpty<MissingFields<T, FieldValues>>,
+    BuilderFunctions<T, FieldValues> & CanBuild<T, FieldValues>,
+    BuilderFunctions<T, FieldValues>
+>;
+
+
+type BuilderFunctions<
+    T,
+    FieldValues extends Record<string, any>,
+    Fields = FieldsToSet<T, FieldValues>
+> = {
+        [Key in keyof Fields & string as GetName<Fields[Key], Key>]: BuilderSetFunction<Key, Fields[Key], T, FieldValues>
     };
 
-export function createBuilder<T extends Buildable<any>>(constructor: typeof Buildable, values?: any): Builder<T> {
+interface CanBuild<T, Values> {
+    build(): T & Buildable<Values>;
+}
+
+const emptyProxy = new Proxy({}, {
+    get() { return "" }
+})
+
+const constructorFields: Record<string, string[]> = {};
+
+export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any[]) => T, values?: any): Builder<T> {
+    const staticClazz = clazz.prototype.constructor as typeof Buildable;
+    if (!constructorFields[clazz.toString()]) {
+        constructorFields[clazz.toString()] = Object.getOwnPropertyNames(new clazz(emptyProxy))
+    }
+    const fields: string[] = constructorFields[clazz.toString()]!;
     return new Proxy<any, Builder<T>>(
-        values ?? constructor.defaults(),
+        values ?? staticClazz.defaults(),
         {
-            apply(target, thisArg, argArray) {
-                console.log("apply", target, thisArg, argArray);
-            },
-            get(target, thisArg, argArray) {
-                return (value: string) => {
-                    const newTarget = target;
-                    // Handle array type not ending in s
-                    if (Array.isArray(newTarget[thisArg])) {
-                        newTarget[thisArg].push(value);
+            get(target, functionName) {
+                return (value: any) => {
+                    if (typeof functionName !== 'string') {
+                        throw new Error("Can only index builders by strings");
                     }
-                    // Handle array type ending in s
-                    else if (typeof thisArg === "string" && Array.isArray(newTarget[thisArg + 's'])) {
-                        newTarget[thisArg + 's'].push(value);
+
+                    // Handle building
+                    if (functionName === "build") {
+                        return new clazz(target);
                     }
-                    // Handle all other types
-                    else {
-                        newTarget[thisArg] = value;
+
+                    const fieldName = fields.find(name => name === functionName) || fields.find(name => name.startsWith(functionName));
+                    if (!fieldName) {
+                        throw new Error("Was not able to find field by index: " + functionName);
                     }
-                    console.log(newTarget);
-                    return createBuilder(constructor, newTarget);
+
+                    const evaluatedValue = evaluateSetValue(value, staticClazz.constructors()[fieldName]);
+
+                    const newTarget = {
+                        ...target
+                    };
+
+                    if (Array.isArray(newTarget[fieldName])) {
+                        newTarget[fieldName].push(evaluatedValue);
+                    } else {
+                        newTarget[fieldName] = evaluatedValue;
+                    }
+                    return createBuilder(clazz, newTarget);
                 };
             }
         }
     );
+}
+
+function evaluateSetValue(value: any, constructor?: new (...args: any[]) => any): any {
+    if (value instanceof Function && constructor) {
+        return evaluateSetValue(value(createBuilder(constructor)))
+    }
+    if (value['build']) {
+        return value.build();
+    }
+    return value;
 }
 
 declare global {

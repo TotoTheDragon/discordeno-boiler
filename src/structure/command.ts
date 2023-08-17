@@ -1,8 +1,7 @@
 import { ApplicationCommandOptionTypes, ApplicationCommandTypes, CreateApplicationCommand, DiscordApplicationCommandOption } from "@discordeno/types";
-import { Buildable, Builder, createBuilder } from "./builder.js";
-import { implementsStatic } from "./decorators.js";
+import { Argument } from "./argument.js";
+import { Buildable } from "./builder.js";
 import { ClassFields } from "./typeUtil.js";
-import { Argument } from "src/structure/argument.js";
 
 export type CommandFunction<Values = {}> = (client: object, values: Values) => void;
 
@@ -41,14 +40,10 @@ export class Command extends Buildable<any> {
     }
 
     static defaults() {
-        return {
-            options: []
-        }
+        return { options: [] }
     }
 
     static constructors() {
-        return {
-            options: Argument
-        }
+        return { options: Argument }
     }
 }
