@@ -28,3 +28,5 @@ export type ExtractType<T> = ExtractArrayType<T>;
 export type RemoveArrayTypes<T> = ExcludeType<T, any[]>;
 
 export type ReturnTypeOrType<T> = T extends (...args: any[]) => infer R ? R : T;
+
+export type Append<I, T extends unknown[] = []> = T extends any[] ? [...T, I] : [I];

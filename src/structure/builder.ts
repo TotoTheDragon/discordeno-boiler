@@ -1,43 +1,4 @@
-import { ClassFields, ExtractType, Merge, RemoveArrayTypes, ReturnTypeOrType } from "src/structure/typeUtil.js";
-
-// type ClassBuilder<C, Required extends keyof C, Optional extends keyof C> = {
-//     -readonly [Key in keyof T]: SetFunction<T[Key]>
-// }
-
-type SetFunction<Type> = Type extends never ? never : (value: Type) => void;
-
-type RequiredKeys<T> = keyof { [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K] }
-
-type HasRequiredFields<T> = RequiredKeys<T> extends never ? false : true;
-
-// type x =  ClassBuilder<Command>;
-// const a: x;
-
-/*
-    Command.builder()
-        .argument(x) Builder<Command, >
-        .handle(context => {
-            context.arguments.x;
-        })
-
-
-*/
-
-
-// FieldsNotSet extends Partial<ClassParameters<T>> = ClassParameters<T>, 
-
-
-// type HandleFunction<T extends Builder<any, any, any>> = T extends Builder<Command, infer FieldsNotSet, infer Values> ?
-//     HasRequiredFields<FieldsNotSet> extends false ?
-//     (args: Values) => void
-//     : never
-//     : never;
-
-
-// const x: HandleFunction<Builder<Command, {}>> = (args) => {
-//     args
-// };
-
+import { Append, ClassFields, ExtractType, Merge, RemoveArrayTypes, ReturnTypeOrType } from "src/structure/typeUtil.js";
 
 export abstract class Buildable<Values> {
 
@@ -54,16 +15,9 @@ export abstract class Buildable<Values> {
     }
 }
 
-// export interface Buildable<T> {
-//     builder(): Builder<T>;
-//     defaults(): Partial<ClassFields<T>>;
-// }
-
 type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => Builder<T>);
 
 type GetName<Type, Key extends string> = Type extends any[] ? Key extends `${infer key}s` ? key : Key : Key;
-
-type Append<I, T extends unknown[] = []> = T extends any[] ? [...T, I] : [I];
 
 type BuilderSetFunction<
     Key extends string,
@@ -83,8 +37,6 @@ type BuilderSetGenericFunction<
     ? <U extends ExtractType<ValueType>>(arr_value: U) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<U, Values[Key]> }>>
     : <U extends ValueType>(value: U) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: U }>>;
 
-
-
 type BuilderSetBuildableFunction<
     Key extends string,
     ValueType extends Buildable<any>,
@@ -99,9 +51,11 @@ export type Builder<
     BuilderReturnType,
     FieldValues extends Record<string, any> = {},
     FieldsToSet = Omit<ClassFields<BuilderReturnType>, keyof RemoveArrayTypes<FieldValues>>,
-> = { build: () => BuilderReturnType & Buildable<FieldValues> } & {
-    [Key in keyof FieldsToSet & string as GetName<FieldsToSet[Key], Key>]: BuilderSetFunction<Key, FieldsToSet[Key], BuilderReturnType, FieldValues>
-};
+> =
+    { build: () => BuilderReturnType & Buildable<FieldValues> } &
+    {
+        [Key in keyof FieldsToSet & string as GetName<FieldsToSet[Key], Key>]: BuilderSetFunction<Key, FieldsToSet[Key], BuilderReturnType, FieldValues>
+    };
 
 export function createBuilder<T extends Buildable<any>>(constructor: typeof Buildable, values?: any): Builder<T> {
     return new Proxy<any, Builder<T>>(
