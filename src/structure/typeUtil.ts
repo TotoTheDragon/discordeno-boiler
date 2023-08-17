@@ -11,6 +11,9 @@ type ExcludeType<T, U> = {
 };
 type ExtractArrayType<T> = T extends (infer U)[] ? U : T;
 
+export type Constructor<T> = new (...args: any[]) => T;
+
+export type ClassOf<T extends Constructor<any>> = T extends Constructor<infer R> ? R : never;
 
 export type ClassFields<T> = {
     [Key in GetReadonlyKeys<T>]: T[Key]
@@ -22,5 +25,6 @@ export type Merge<Obj> = {
 
 export type ExtractType<T> = ExtractArrayType<T>;
 
-
 export type RemoveArrayTypes<T> = ExcludeType<T, any[]>;
+
+export type ReturnTypeOrType<T> = T extends (...args: any[]) => infer R ? R : T;

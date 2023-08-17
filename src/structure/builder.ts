@@ -1,7 +1,4 @@
-import { ClassFields, ExtractType, Merge, RemoveArrayTypes } from "src/structure/typeUtil.js";
-import { Command } from "./command.js";
-import { ApplicationCommandOptionTypes } from "@discordeno/bot";
-import { Argument } from "src/structure/argument.js";
+import { ClassFields, ExtractType, Merge, RemoveArrayTypes, ReturnTypeOrType } from "src/structure/typeUtil.js";
 
 // type ClassBuilder<C, Required extends keyof C, Optional extends keyof C> = {
 //     -readonly [Key in keyof T]: SetFunction<T[Key]>
@@ -62,6 +59,8 @@ export abstract class Buildable<Values> {
 //     defaults(): Partial<ClassFields<T>>;
 // }
 
+type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => Builder<T>);
+
 type GetName<Type, Key extends string> = Type extends any[] ? Key extends `${infer key}s` ? key : Key : Key;
 
 type Append<I, T extends unknown[] = []> = T extends any[] ? [...T, I] : [I];
@@ -75,9 +74,6 @@ type BuilderSetFunction<
     ? BuilderSetBuildableFunction<Key, ValueType, BuilderReturnType, Values>
     : BuilderSetGenericFunction<Key, ValueType, BuilderReturnType, Values>;
 
-type y = ApplicationCommandOptionTypes extends Buildable<any> ? string : number;
-type x = BuilderSetFunction<"a", ApplicationCommandOptionTypes, Argument, {}>;
-
 type BuilderSetGenericFunction<
     Key extends string,
     ValueType,
@@ -87,8 +83,7 @@ type BuilderSetGenericFunction<
     ? <U extends ExtractType<ValueType>>(arr_value: U) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<U, Values[Key]> }>>
     : <U extends ValueType>(value: U) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: U }>>;
 
-type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => Builder<T>);
-type RT<T> = T extends (...args: any[]) => any ? ReturnType<T> : T;
+
 
 type BuilderSetBuildableFunction<
     Key extends string,
@@ -96,22 +91,17 @@ type BuilderSetBuildableFunction<
     BuilderReturnType,
     Values extends Record<string, any>
 > = ValueType extends any[]
-    ? <U extends ExtractType<ValueType>, V extends BuildableFunction<U>>(arr_builder: V) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<RT<V>, Values[Key]> }>>
+    ? <U extends ExtractType<ValueType>, V extends BuildableFunction<U>>(arr_builder: V) => Builder<BuilderReturnType, Merge<Omit<Values, Key> & { [key in Key]: Append<ReturnTypeOrType<V>, Values[Key]> }>>
     : <U extends ValueType>(builder: U) => Builder<BuilderReturnType, Merge<Values & { [key in Key]: U }>>;
 
-type BuilderFunctions<
-    T,
-    FieldValues extends Record<string, any>,
-    FieldsNotSet
-> = {
-        [Key in keyof FieldsNotSet & string as GetName<FieldsNotSet[Key], Key>]: BuilderSetFunction<Key, FieldsNotSet[Key], T, FieldValues>
-    };
 
 export type Builder<
-    T,
+    BuilderReturnType,
     FieldValues extends Record<string, any> = {},
-    FieldsToSet = Omit<ClassFields<T>, keyof RemoveArrayTypes<FieldValues>>,
-> = BuilderFunctions<T, FieldValues, FieldsToSet> & { build: () => T & Buildable<FieldValues> };
+    FieldsToSet = Omit<ClassFields<BuilderReturnType>, keyof RemoveArrayTypes<FieldValues>>,
+> = { build: () => BuilderReturnType & Buildable<FieldValues> } & {
+    [Key in keyof FieldsToSet & string as GetName<FieldsToSet[Key], Key>]: BuilderSetFunction<Key, FieldsToSet[Key], BuilderReturnType, FieldValues>
+};
 
 export function createBuilder<T extends Buildable<any>>(constructor: typeof Buildable, values?: any): Builder<T> {
     return new Proxy<any, Builder<T>>(
