@@ -3,6 +3,12 @@ import { ClassFields, ExtractType, IfElse, IsArray, IsEmpty, Merge, Push, Remove
 // This symbol is used a field on Buildable to make sure that the type system can properly pick up that it is an instance of Buildable
 const BuildableSymbol = Symbol("buildable");
 
+export interface BuildableMetadata {
+    type: any;
+    default?: any;
+    ctor?: new (...args: any[]) => any
+}
+
 export interface Buildable<Values> {
     [BuildableSymbol]?: never;
 }
@@ -17,11 +23,7 @@ export abstract class Buildable<Values> {
         return createBuilder(this);
     }
 
-    static fields(): Record<string, any> {
-        return {};
-    }
-
-    static constructors(): Record<string, any> {
+    static metadata(): Record<string, Partial<BuildableMetadata>> {
         return {};
     }
 }
@@ -86,11 +88,12 @@ const constructorFields: Record<string, string[]> = {};
 export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any[]) => T, values?: any): Builder<T> {
     const staticClazz = clazz.prototype.constructor as typeof Buildable;
     if (!constructorFields[clazz.toString()]) {
-        constructorFields[clazz.toString()] = Object.getOwnPropertyNames(staticClazz.fields())
+        constructorFields[clazz.toString()] = Object.getOwnPropertyNames(staticClazz.metadata())
     }
     const fields: string[] = constructorFields[clazz.toString()]!;
+    const defaults = Object.fromEntries(Object.entries(staticClazz.metadata()).filter(([k, v]) => v.default !== undefined).map(([k, v]) => [k, v.default]));
     return new Proxy<any, Builder<T>>(
-        values ?? Object.fromEntries(Array.from(Object.entries(staticClazz.fields())).filter(([k,v]) => v!= undefined)),
+        values ?? defaults,
         {
             get(target, functionName) {
                 return (value: any) => {
@@ -107,8 +110,7 @@ export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any
                     if (!fieldName) {
                         throw new Error("Was not able to find field by index: " + functionName);
                     }
-
-                    const evaluatedValue = evaluateSetValue(value, staticClazz.constructors()[fieldName]);
+                    const evaluatedValue = evaluateSetValue(value, staticClazz.metadata()[fieldName].ctor);
                     const newTarget = {
                         ...target
                     };

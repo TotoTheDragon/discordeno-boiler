@@ -2,7 +2,7 @@
 // import { implementsStatic } from "src/structure/decorators.js";
 
 import { ApplicationCommandOptionTypes, DiscordApplicationCommandOption } from "@discordeno/bot";
-import { Buildable } from "./builder.js";
+import { Buildable, BuildableMetadata } from "./builder.js";
 import { ClassFields } from "./typeUtil.js";
 
 export interface Argument {
@@ -18,17 +18,18 @@ export interface Argument {
 }
 
 export class Argument extends Buildable<any> {
-    static fields(): Record<keyof ClassFields<Argument>, any> {
+
+    static metadata(): Record<keyof ClassFields<Argument>, Partial<BuildableMetadata>> {
         return {
-            type: undefined,
-            name: undefined,
-            description: undefined,
-            required: undefined,
-            autocomplete: undefined,
-            min_value: undefined,
-            max_value: undefined,
-            min_length: undefined,
-            max_length: undefined
+            type: {},
+            name: {},
+            description: {},
+            required: {},
+            autocomplete: {},
+            min_value: {},
+            max_value: {},
+            min_length: {},
+            max_length: {}
         }
     }
 
