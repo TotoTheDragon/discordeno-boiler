@@ -3,9 +3,15 @@ import { ClassFields, ExtractType, IfElse, IsArray, IsEmpty, Merge, Push, Remove
 // This symbol is used a field on Buildable to make sure that the type system can properly pick up that it is an instance of Buildable
 const BuildableSymbol = Symbol("buildable");
 
+export interface Buildable<Values> {
+    [BuildableSymbol]?: never;
+}
+
 export abstract class Buildable<Values> {
 
-    [BuildableSymbol]?: never;
+    constructor(data: any) {
+        Object.assign(this, data);
+    }
 
     static builder<T extends Buildable<any>>(this: new (...args: any[]) => T): Builder<T> {
         return createBuilder(this);
@@ -84,7 +90,7 @@ export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any
     }
     const fields: string[] = constructorFields[clazz.toString()]!;
     return new Proxy<any, Builder<T>>(
-        values ?? staticClazz.fields(),
+        values ?? Object.fromEntries(Array.from(Object.entries(staticClazz.fields())).filter(([k,v]) => v!= undefined)),
         {
             get(target, functionName) {
                 return (value: any) => {

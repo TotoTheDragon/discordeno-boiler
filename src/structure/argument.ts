@@ -31,27 +31,20 @@ import { ClassFields } from "./typeUtil.js";
 // // TODO deconstruct enums to also be types
 // type x = keyof typeof ApplicationCommandOptionTypes;
 
-export class Argument extends Buildable<any> {
-
-    readonly type!: ApplicationCommandOptionTypes;
-    /**
-     * Name of command, 1-32 characters.
-     */
-    readonly name!: string;
-    /** 1-100 character description */
-    readonly description!: string;
+export interface Argument {
+    readonly type: ApplicationCommandOptionTypes;
+    readonly name: string;
+    readonly description: string;
     readonly required?: boolean;
     readonly autocomplete?: boolean;
     readonly min_value?: number;
     readonly max_value?: number;
     readonly min_length?: number;
     readonly max_length?: number;
+}
 
-    constructor(data: any){
-        super();
-        Object.assign(this, data);
-    }
-
+export class Argument extends Buildable<any> {
+    
     static fields(): Record<keyof ClassFields<Argument>, any> {
         return {
             type: undefined,

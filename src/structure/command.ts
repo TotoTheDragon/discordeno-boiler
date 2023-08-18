@@ -5,21 +5,20 @@ import { ClassFields } from "./typeUtil.js";
 
 export type CommandFunction<Values = {}> = (client: object, values: Values) => void;
 
-export class Command extends Buildable<any> {
-
-    readonly name!: string;
-    readonly description!: string;
-    readonly options!: Argument[];
+export interface Command {
+    readonly execute: CommandFunction;
+    readonly name: string;
+    readonly description: string;
+    readonly options: Argument[];
     readonly subcommand?: string;
     readonly subgroup?: string;
+}
 
-    readonly execute!: CommandFunction;
-
+export class Command extends Buildable<any> {
     private readonly type: number;
 
     constructor(data: ClassFields<Command>) {
-        super();
-        Object.assign(this, data);
+        super(data);
         this.type = this.subgroup || this.subcommand ?
             ApplicationCommandOptionTypes.SubCommand :
             ApplicationCommandTypes.ChatInput;
