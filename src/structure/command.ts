@@ -7,24 +7,19 @@ export type CommandFunction<Values = {}> = (client: object, values: Values) => v
 
 export class Command extends Buildable<any> {
 
-    readonly name: string;
-    readonly description: string;
-    readonly options: Argument[];
+    readonly name!: string;
+    readonly description!: string;
+    readonly options!: Argument[];
     readonly subcommand?: string;
     readonly subgroup?: string;
 
-    readonly execute: CommandFunction;
+    readonly execute!: CommandFunction;
 
     private readonly type: number;
 
     constructor(data: ClassFields<Command>) {
         super();
-        this.name = data.name;
-        this.description = data.description;
-        this.options = data.options;
-        this.subcommand = data.subcommand;
-        this.subgroup = data.subgroup;
-        this.execute = data.execute;
+        Object.assign(this, data);
         this.type = this.subgroup || this.subcommand ?
             ApplicationCommandOptionTypes.SubCommand :
             ApplicationCommandTypes.ChatInput;
@@ -39,8 +34,15 @@ export class Command extends Buildable<any> {
         }
     }
 
-    static defaults() {
-        return { options: [] }
+    static fields(): Record<keyof ClassFields<Command>, any> {
+        return {
+            name: undefined,
+            description: undefined,
+            options: [],
+            subcommand: undefined,
+            subgroup: undefined,
+            execute: undefined
+        }
     }
 
     static constructors() {

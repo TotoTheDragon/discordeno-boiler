@@ -33,13 +33,13 @@ import { ClassFields } from "./typeUtil.js";
 
 export class Argument extends Buildable<any> {
 
-    readonly type: ApplicationCommandOptionTypes;
+    readonly type!: ApplicationCommandOptionTypes;
     /**
      * Name of command, 1-32 characters.
      */
-    readonly name: string;
+    readonly name!: string;
     /** 1-100 character description */
-    readonly description: string;
+    readonly description!: string;
     readonly required?: boolean;
     readonly autocomplete?: boolean;
     readonly min_value?: number;
@@ -47,16 +47,22 @@ export class Argument extends Buildable<any> {
     readonly min_length?: number;
     readonly max_length?: number;
 
-    constructor(data: ClassFields<Argument>) {
+    constructor(data: any){
         super();
-        this.type = data.type;
-        this.name = data.name;
-        this.description = data.description;
-        this.required = data.required;
-        this.autocomplete = data.autocomplete;
-        this.min_value = data.min_value;
-        this.max_value = data.max_value;
-        this.min_length = data.min_length;
-        this.max_length = data.max_length;
+        Object.assign(this, data);
+    }
+
+    static fields(): Record<keyof ClassFields<Argument>, any> {
+        return {
+            type: undefined,
+            name: undefined,
+            description: undefined,
+            required: undefined,
+            autocomplete: undefined,
+            min_value: undefined,
+            max_value: undefined,
+            min_length: undefined,
+            max_length: undefined
+        }
     }
 }

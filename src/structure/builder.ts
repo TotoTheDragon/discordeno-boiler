@@ -7,14 +7,11 @@ export abstract class Buildable<Values> {
 
     [BuildableSymbol]?: never;
 
-    constructor() {
-    }
-
     static builder<T extends Buildable<any>>(this: new (...args: any[]) => T): Builder<T> {
         return createBuilder(this);
     }
 
-    static defaults(): Record<string, any> {
+    static fields(): Record<string, any> {
         return {};
     }
 
@@ -24,7 +21,6 @@ export abstract class Buildable<Values> {
 }
 
 type IsBuildable<T> = T extends Buildable<any> | Buildable<any>[] ? true : false;
-
 
 type BuildableFunction<T> = T | ((v: Builder<T>) => T) | ((v: Builder<T>) => CanBuild<T, any>);
 type GetName<Type, Key extends string> = Type extends any[] ? Key extends `${infer key}s` ? key : Key : Key;
@@ -79,20 +75,16 @@ interface CanBuild<T, Values> {
     build(): T & Buildable<Values>;
 }
 
-const emptyProxy = new Proxy({}, {
-    get() { return "" }
-})
-
 const constructorFields: Record<string, string[]> = {};
 
 export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any[]) => T, values?: any): Builder<T> {
     const staticClazz = clazz.prototype.constructor as typeof Buildable;
     if (!constructorFields[clazz.toString()]) {
-        constructorFields[clazz.toString()] = Object.getOwnPropertyNames(new clazz(emptyProxy))
+        constructorFields[clazz.toString()] = Object.getOwnPropertyNames(staticClazz.fields())
     }
     const fields: string[] = constructorFields[clazz.toString()]!;
     return new Proxy<any, Builder<T>>(
-        values ?? staticClazz.defaults(),
+        values ?? staticClazz.fields(),
         {
             get(target, functionName) {
                 return (value: any) => {
@@ -111,7 +103,6 @@ export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any
                     }
 
                     const evaluatedValue = evaluateSetValue(value, staticClazz.constructors()[fieldName]);
-
                     const newTarget = {
                         ...target
                     };
@@ -129,8 +120,9 @@ export function createBuilder<T extends Buildable<any>>(clazz: new (...args: any
 }
 
 function evaluateSetValue(value: any, constructor?: new (...args: any[]) => any): any {
-    if (value instanceof Function && constructor) {
-        return evaluateSetValue(value(createBuilder(constructor)))
+    if (value instanceof Function && constructor !== undefined) {
+        const builder = value(createBuilder(constructor));
+        return evaluateSetValue(builder)
     }
     if (value['build']) {
         return value.build();
