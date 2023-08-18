@@ -1,35 +1,9 @@
 // import { Command } from "src/structure/command.js";
 // import { implementsStatic } from "src/structure/decorators.js";
 
-import { ApplicationCommandOptionTypes } from "@discordeno/bot";
+import { ApplicationCommandOptionTypes, DiscordApplicationCommandOption } from "@discordeno/bot";
 import { Buildable } from "./builder.js";
 import { ClassFields } from "./typeUtil.js";
-
-// function f(key: string): any {
-//     console.log("evaluate: ", key);
-//     return function () {
-//         console.log("call: ", key);
-//     };
-// }
-
-// export class Argument {
-
-//     readonly name: string;
-
-//     @f("type")
-//     readonly type: ApplicationCommandOptionTypes;
-
-
-//     public asOption(): DiscordApplicationCommandOption {
-//         return {
-//             name: this.name,
-
-//         }
-//     }
-// }
-// type EnumValueMap<T> = { [K in keyof T]: string }
-// // TODO deconstruct enums to also be types
-// type x = keyof typeof ApplicationCommandOptionTypes;
 
 export interface Argument {
     readonly type: ApplicationCommandOptionTypes;
@@ -44,7 +18,6 @@ export interface Argument {
 }
 
 export class Argument extends Buildable<any> {
-    
     static fields(): Record<keyof ClassFields<Argument>, any> {
         return {
             type: undefined,
@@ -57,5 +30,9 @@ export class Argument extends Buildable<any> {
             min_length: undefined,
             max_length: undefined
         }
+    }
+
+    public asOption(): DiscordApplicationCommandOption {
+        return this;
     }
 }

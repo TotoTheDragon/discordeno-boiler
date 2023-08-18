@@ -15,21 +15,15 @@ export interface Command {
 }
 
 export class Command extends Buildable<any> {
-    private readonly type: number;
-
-    constructor(data: ClassFields<Command>) {
-        super(data);
-        this.type = this.subgroup || this.subcommand ?
-            ApplicationCommandOptionTypes.SubCommand :
-            ApplicationCommandTypes.ChatInput;
-    }
 
     public asApplicationCommand(): DiscordApplicationCommandOption | CreateApplicationCommand {
         return {
             name: this.name,
-            type: this.type,
             description: this.description,
-            // options: this._options.map(argument => argument.asOption()),
+            options: this.options.map(argument => argument.asOption()),
+            type: this.subgroup || this.subcommand ?
+                ApplicationCommandOptionTypes.SubCommand :
+                ApplicationCommandTypes.ChatInput,
         }
     }
 
